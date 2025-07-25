@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/authStore';
 
 type AuthFormMode = 'login' | 'signup';
@@ -18,6 +20,7 @@ interface AuthFormProps {
 const AuthForm = ({ mode }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -36,6 +39,38 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           email,
           password
         );
+        
+        const user = userCredential.user;
+        
+        // プロフィール更新
+        if (name) {
+          await updateProfile(user, { displayName: name });
+        }
+
+        // Firestoreにユーザー情報を保存
+        await setDoc(doc(db, 'users', user.uid), {
+          name: name || '',
+          email: user.email,
+          role: 'admin', // 初回登録者は管理者
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+
+        // 組織情報も作成
+        await setDoc(doc(db, 'organizations', user.uid), {
+          name: name ? `${name}の組織` : '新しい組織',
+          ownerId: user.uid,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          settings: {
+            currency: 'JPY',
+            timezone: 'Asia/Tokyo',
+            workingHours: {
+              start: '09:00',
+              end: '18:00'
+            }
+          }
+        });
       } else {
         userCredential = await signInWithEmailAndPassword(
           auth,
@@ -45,15 +80,21 @@ const AuthForm = ({ mode }: AuthFormProps) => {
       }
       
       const user = userCredential.user;
-      setUser({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-      });
+      setUser(user); // Firebaseの完全なUserオブジェクトを使用
 
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('このメールアドレスは既に使用されています。');
+      } else if (err.code === 'auth/weak-password') {
+        setError('パスワードが弱すぎます。6文字以上で入力してください。');
+      } else if (err.code === 'auth/user-not-found') {
+        setError('ユーザーが見つかりません。');
+      } else if (err.code === 'auth/wrong-password') {
+        setError('パスワードが正しくありません。');
+      } else {
+        setError('認証に失敗しました。もう一度お試しください。');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -61,6 +102,29 @@ const AuthForm = ({ mode }: AuthFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {mode === 'signup' && (
+        <div>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700"
+          >
+            お名前
+          </label>
+          <div className="mt-1">
+            <input
+              id="name"
+              name="name"
+              type="text"
+              autoComplete="name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
+        </div>
+      )}
+
       <div>
         <label
           htmlFor="email"
@@ -87,14 +151,14 @@ const AuthForm = ({ mode }: AuthFormProps) => {
           htmlFor="password"
           className="block text-sm font-medium text-gray-700"
         >
-          パスワード
+          パスワード{mode === 'signup' && '（6文字以上）'}
         </label>
         <div className="mt-1">
           <input
             id="password"
             name="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}

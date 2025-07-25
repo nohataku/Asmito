@@ -38,16 +38,23 @@ export interface OrganizationSettings {
 
 export interface Employee {
   id: string
-  userId: string
+  userId?: string
   organizationId: string
+  employeeId?: string
   name: string
-  position: string
+  email?: string
+  phone?: string
+  position?: string
+  department?: string
   hourlyRate: number
-  skills: string[]
-  availability: Availability[]
-  constraints: Constraint[]
-  createdAt: Date
-  updatedAt: Date
+  maxHoursPerWeek?: number
+  maxDaysPerWeek?: number
+  isActive: boolean
+  skills?: string[]
+  availability?: Availability[]
+  constraints?: Constraint[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Availability {
@@ -65,14 +72,16 @@ export interface Constraint {
 export interface ShiftRequest {
   id: string
   employeeId: string
+  organizationId?: string
   date: string
   startTime?: string
   endTime?: string
-  type: 'work_request' | 'time_off_request'
+  type: 'work' | 'off'
   priority: 'low' | 'medium' | 'high'
   reason?: string
   status: 'pending' | 'approved' | 'rejected'
-  createdAt: Date
+  submittedAt: string
+  createdAt?: Date
 }
 
 export interface Shift {

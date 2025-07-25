@@ -2,33 +2,31 @@
 
 import AuthForm from '@/components/auth/AuthForm'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
-import Layout from '@/components/layout/Layout'
 import Link from 'next/link'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
-    <Layout>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-indigo-600 mb-2">Asmito</h1>
             <h2 className="text-2xl font-bold text-gray-900">
-              アカウントにログイン
+              アカウントを作成
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               または{' '}
-              <Link href="/auth/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-                新しいアカウントを作成
+              <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+                既存のアカウントでログイン
               </Link>
             </p>
           </div>
         </div>
         
         <div className="mt-8">
-          {/* Googleログイン */}
+          {/* Googleアカウント作成 */}
           <div className="mb-6">
-            <GoogleSignInButton text="Googleでログイン" />
+            <GoogleSignInButton text="Googleでアカウント作成" />
           </div>
 
           {/* 区切り線 */}
@@ -41,17 +39,22 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* メール・パスワードログイン */}
-          <AuthForm mode="login" />
+          {/* メール・パスワード登録 */}
+          <AuthForm mode="signup" />
           
-          <div className="mt-6 text-center">
-            <Link href="/auth/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
-              パスワードを忘れた方はこちら
+          <div className="mt-6 text-center text-xs text-gray-600">
+            アカウントを作成することで、{' '}
+            <Link href="/terms" className="text-indigo-600 hover:text-indigo-500">
+              利用規約
             </Link>
+            {' '}と{' '}
+            <Link href="/privacy" className="text-indigo-600 hover:text-indigo-500">
+              プライバシーポリシー
+            </Link>
+            に同意したものとみなします。
           </div>
         </div>
       </div>
-      </div>
-    </Layout>
+    </div>
   )
 }
