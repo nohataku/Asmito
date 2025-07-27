@@ -301,7 +301,7 @@ export default function ShiftRequestsPage() {
               従業員から提出されたシフト希望を柔軟な期間で確認できます
             </p>
           </div>
-          <Link href="/dashboard">
+          <Link href="/">
             <Button variant="outline">ダッシュボードに戻る</Button>
           </Link>
         </div>
