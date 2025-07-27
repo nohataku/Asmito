@@ -8,6 +8,8 @@ export interface Employee {
   hourlyRate: number;
   joinDate: string;
   status: 'active' | 'inactive';
+  maxHoursPerWeek?: number;
+  maxDaysPerWeek?: number;
   phone?: string;
   address?: string;
   emergencyContact?: {
@@ -37,6 +39,8 @@ export interface CreateEmployeeData {
   position: string;
   hourlyRate: number;
   joinDate: string;
+  maxHoursPerWeek?: number;
+  maxDaysPerWeek?: number;
   phone?: string;
   address?: string;
   emergencyContact?: {

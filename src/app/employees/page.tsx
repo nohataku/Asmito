@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
+import { EmployeeService } from '@/services/employeeService'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Employee } from '@/types'
+import { Employee } from '@/types/employee'
 
 export default function EmployeesPage() {
   const { user } = useAuthStore()
@@ -33,20 +34,13 @@ export default function EmployeesPage() {
     if (!user) return
 
     try {
-      const q = query(
-        collection(db, 'employees'),
-        where('organizationId', '==', user.uid)
-      )
-      const querySnapshot = await getDocs(q)
-      const employeeList: Employee[] = []
-      
-      querySnapshot.forEach((doc) => {
-        employeeList.push({ id: doc.id, ...doc.data() } as Employee)
-      })
-      
+      console.log('従業員データを取得中...', { organizationId: user.uid })
+      const employeeList = await EmployeeService.getEmployees(user.uid)
+      console.log(`従業員データを取得しました: ${employeeList.length}件`, employeeList)
       setEmployees(employeeList)
     } catch (error) {
       console.error('従業員データの取得に失敗しました:', error)
+      alert('従業員データの取得に失敗しました。')
     } finally {
       setIsLoading(false)
     }
@@ -68,23 +62,18 @@ export default function EmployeesPage() {
         phone: formData.phone,
         hourlyRate: parseInt(formData.hourlyRate),
         position: formData.position,
-        maxHoursPerWeek: parseInt(formData.maxHoursPerWeek),
-        maxDaysPerWeek: parseInt(formData.maxDaysPerWeek),
-        organizationId: user.uid,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        maxHoursPerWeek: formData.maxHoursPerWeek ? parseInt(formData.maxHoursPerWeek) : undefined,
+        maxDaysPerWeek: formData.maxDaysPerWeek ? parseInt(formData.maxDaysPerWeek) : undefined,
+        department: formData.position, // 部署は一旦役職と同じにする
+        joinDate: new Date().toISOString().split('T')[0] // 今日の日付
       }
 
       if (editingEmployee) {
         // 更新
-        await updateDoc(doc(db, 'employees', editingEmployee.id), {
-          ...employeeData,
-          createdAt: editingEmployee.createdAt // 作成日は保持
-        })
+        await EmployeeService.updateEmployee(editingEmployee.id, employeeData)
       } else {
         // 新規追加
-        await addDoc(collection(db, 'employees'), employeeData)
+        await EmployeeService.addEmployee(user.uid, employeeData)
       }
 
       // フォームリセット
@@ -102,6 +91,7 @@ export default function EmployeesPage() {
       fetchEmployees()
     } catch (error) {
       console.error('従業員の保存に失敗しました:', error)
+      alert('従業員の保存に失敗しました。')
     }
   }
 
@@ -123,10 +113,114 @@ export default function EmployeesPage() {
     if (!confirm('この従業員を削除しますか？')) return
 
     try {
-      await deleteDoc(doc(db, 'employees', employeeId))
+      await EmployeeService.deleteEmployee(employeeId)
       fetchEmployees()
     } catch (error) {
       console.error('従業員の削除に失敗しました:', error)
+      alert('従業員の削除に失敗しました。')
+    }
+  }
+
+  const addSampleData = async () => {
+    if (!user) return
+
+    const sampleEmployees = [
+      {
+        name: '田中太郎',
+        email: 'tanaka@example.com',
+        department: 'フロント',
+        position: 'スタッフ',
+        hourlyRate: 1000,
+        joinDate: '2025-01-01',
+        phone: '090-1234-5678'
+      },
+      {
+        name: '佐藤花子',
+        email: 'sato@example.com', 
+        department: 'キッチン',
+        position: 'シェフ',
+        hourlyRate: 1200,
+        joinDate: '2025-01-01',
+        phone: '090-2345-6789'
+      },
+      {
+        name: '山田次郎',
+        email: 'yamada@example.com',
+        department: 'フロント',
+        position: 'マネージャー',
+        hourlyRate: 1500,
+        joinDate: '2025-01-01',
+        phone: '090-3456-7890'
+      }
+    ]
+
+    try {
+      for (const employeeData of sampleEmployees) {
+        await EmployeeService.addEmployee(user.uid, employeeData)
+      }
+      fetchEmployees()
+      alert('サンプル従業員データを追加しました。')
+    } catch (error) {
+      console.error('サンプルデータの追加に失敗しました:', error)
+      alert('サンプルデータの追加に失敗しました。')
+    }
+  }
+
+  const fixExistingData = async () => {
+    if (!user) return
+
+    try {
+      console.log('既存データの修正を開始...')
+      
+      // 全従業員データを取得（フィルタなし）
+      const q = query(
+        collection(db, 'employees'),
+        where('organizationId', '==', user.uid)
+      )
+      const querySnapshot = await getDocs(q)
+      
+      let fixedCount = 0
+      
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data()
+        const updates: any = {}
+        
+        // isActiveをstatusに変換
+        if (data.isActive !== undefined && !data.status) {
+          updates.status = data.isActive ? 'active' : 'inactive'
+        }
+        
+        // 必須フィールドのデフォルト値を設定
+        if (!data.department && data.position) {
+          updates.department = data.position
+        }
+        if (!data.joinDate && data.createdAt) {
+          updates.joinDate = data.createdAt.split('T')[0]
+        }
+        if (!data.name) {
+          updates.name = 'Unknown'
+        }
+        if (!data.email) {
+          updates.email = ''
+        }
+        if (data.hourlyRate === undefined) {
+          updates.hourlyRate = 0
+        }
+        
+        // 更新が必要な場合のみ実行
+        if (Object.keys(updates).length > 0) {
+          updates.updatedAt = new Date().toISOString()
+          await updateDoc(doc(db, 'employees', docSnap.id), updates)
+          fixedCount++
+          console.log(`従業員データを修正: ${docSnap.id}`, updates)
+        }
+      }
+      
+      alert(`${fixedCount}件の従業員データを修正しました。`)
+      fetchEmployees()
+    } catch (error) {
+      console.error('データ修正に失敗しました:', error)
+      alert('データ修正に失敗しました。')
     }
   }
 
@@ -158,12 +252,22 @@ export default function EmployeesPage() {
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900">従業員管理</h1>
-            <Button onClick={() => setShowAddForm(true)}>
-              <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              従業員追加
-            </Button>
+            <div className="space-x-2">
+              {employees.length === 0 && (
+                <Button variant="outline" onClick={addSampleData}>
+                  サンプルデータを追加
+                </Button>
+              )}
+              <Button variant="outline" onClick={fixExistingData}>
+                既存データを修正
+              </Button>
+              <Button onClick={() => setShowAddForm(true)}>
+                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                従業員追加
+              </Button>
+            </div>
           </div>
 
           {/* 従業員追加・編集フォーム */}

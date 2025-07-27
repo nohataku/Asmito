@@ -1,36 +1,8 @@
 import { collection, doc, addDoc, updateDoc, deleteDoc, getDocs, getDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Employee as EmployeeType } from '@/types/employee';
 
-export interface Employee {
-  id: string;
-  name: string;
-  email: string;
-  department: string;
-  position: string;
-  hourlyRate: number;
-  joinDate: string;
-  status: 'active' | 'inactive';
-  phone?: string;
-  address?: string;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  skills?: string[];
-  availableShifts?: {
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    saturday: boolean;
-    sunday: boolean;
-  };
-  createdAt: string;
-  updatedAt: string;
-  organizationId: string;
-}
+export type Employee = EmployeeType;
 
 export interface CreateEmployeeData {
   name: string;
@@ -67,22 +39,42 @@ export class EmployeeService {
       const employeesRef = collection(db, this.collectionName);
       const q = query(
         employeesRef,
-        where('organizationId', '==', organizationId),
-        where('status', '==', 'active'),
-        orderBy('name')
+        where('organizationId', '==', organizationId)
       );
       
       const querySnapshot = await getDocs(q);
       const employees: Employee[] = [];
       
       querySnapshot.forEach((doc) => {
-        employees.push({
-          id: doc.id,
-          ...doc.data()
-        } as Employee);
+        const data = doc.data();
+        console.log('取得した従業員データ:', data);
+        
+        // isActiveフィールドまたはstatusフィールドでアクティブかチェック
+        const isActive = data.isActive === true || data.status === 'active';
+        
+        if (isActive) {
+          employees.push({
+            ...data,
+            id: doc.id,
+            // 必須フィールドのデフォルト値を設定
+            name: data.name || '',
+            email: data.email || '',
+            department: data.department || data.position || 'その他',
+            position: data.position || '',
+            hourlyRate: data.hourlyRate || 0,
+            joinDate: data.joinDate || data.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+            status: data.status || 'active',
+            createdAt: data.createdAt || new Date().toISOString(),
+            updatedAt: data.updatedAt || new Date().toISOString(),
+            organizationId: data.organizationId || organizationId
+          } as Employee);
+        }
       });
       
-      return employees;
+      console.log(`アクティブな従業員: ${employees.length}件`);
+      
+      // クライアント側で名前順にソート
+      return employees.sort((a, b) => a.name.localeCompare(b.name));
     } catch (error) {
       console.error('従業員一覧の取得に失敗しました:', error);
       throw error;
@@ -121,7 +113,9 @@ export class EmployeeService {
         updatedAt: now,
       };
       
+      console.log('従業員データを追加中:', employee);
       const docRef = await addDoc(collection(db, this.collectionName), employee);
+      console.log('従業員データを追加しました:', docRef.id);
       return docRef.id;
     } catch (error) {
       console.error('従業員の追加に失敗しました:', error);
