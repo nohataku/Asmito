@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Employee, Shift } from '@/types'
+import Layout from '@/components/layout/Layout'
 
 interface PayrollCalculation {
   employeeId: string
@@ -271,12 +272,10 @@ export default function PayrollPage() {
   const totalAmount = payrollData.reduce((sum, data) => sum + data.totalPay, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">給与計算</h1>
+    <Layout>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">給与計算</h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {/* 計算設定 */}
             <Card>
               <CardHeader>
@@ -495,8 +494,6 @@ export default function PayrollPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
-    </div>
+    </Layout>
   )
 }

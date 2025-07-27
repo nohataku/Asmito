@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import GanttChart from '@/components/GanttChart'
 import { Employee, ShiftRequest, Shift } from '@/types'
+import Layout from '@/components/layout/Layout'
 
 interface ScheduleSettings {
   startDate: string
@@ -228,12 +229,10 @@ export default function CreateShiftPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">AIシフト作成</h1>
+    <Layout>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">AIシフト作成</h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* 設定パネル */}
             <Card>
               <CardHeader>
@@ -494,9 +493,7 @@ export default function CreateShiftPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
-    </div>
+    </Layout>
   )
 }
 

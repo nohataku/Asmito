@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Layout from '@/components/layout/Layout';
 
 export default function DebugPage() {
   useEffect(() => {
@@ -14,9 +15,11 @@ export default function DebugPage() {
   }, []);
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Firebase Debug Page</h1>
-      <p>Check console for Firebase configuration status</p>
-    </div>
+    <Layout>
+      <div>
+        <h1 className="text-2xl font-bold mb-4">Firebase Debug Page</h1>
+        <p>Check console for Firebase configuration status</p>
+      </div>
+    </Layout>
   );
 }

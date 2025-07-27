@@ -102,10 +102,8 @@ export default function MyShiftRequestPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* ヘッダー */}
-        <div className="mb-8">
+      {/* ヘッダー */}
+      <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">マイシフト希望</h1>
           <p className="mt-2 text-gray-600">
             あなたのシフト希望を入力できます
@@ -311,8 +309,6 @@ export default function MyShiftRequestPage() {
             </CardContent>
           </Card>
         )}
-      </div>
-      </div>
     </Layout>
   );
 }

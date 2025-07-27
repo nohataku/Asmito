@@ -5,6 +5,7 @@ import GanttChart from '@/components/GanttChart'
 import { Employee, Shift } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import Layout from '@/components/layout/Layout'
 
 // テスト用サンプルデータ
 const sampleEmployees: Employee[] = [
@@ -118,13 +119,11 @@ export default function TestGanttPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">ガントチャート機能テスト</h1>
-          
-          {/* 設定パネル */}
-          <Card className="mb-6">
+    <Layout>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">ガントチャート機能テスト</h1>
+      
+      {/* 設定パネル */}
+      <Card className="mb-6">
             <CardHeader>
               <CardTitle>テスト設定</CardTitle>
             </CardHeader>
@@ -231,8 +230,6 @@ export default function TestGanttPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </div>
+    </Layout>
   )
 }

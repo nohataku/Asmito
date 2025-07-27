@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import GanttChart from '@/components/GanttChart'
 import { Employee, Shift, Schedule } from '@/types'
+import Layout from '@/components/layout/Layout'
 
 export default function ShiftViewPage() {
   const { user } = useAuthStore()
@@ -145,23 +146,23 @@ export default function ShiftViewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">シフトデータを読み込み中...</p>
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">シフトデータを読み込み中...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">シフト表・エクスポート</h1>
+    <Layout>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">シフト表・エクスポート</h1>
 
-          {/* フィルター */}
-          <Card className="mb-6">
+      {/* フィルター */}
+      <Card className="mb-6">
             <CardHeader>
               <CardTitle>表示設定</CardTitle>
               <CardDescription>表示するシフトデータを選択してください</CardDescription>
@@ -310,9 +311,7 @@ export default function ShiftViewPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
-    </div>
+    </Layout>
   )
 }
 

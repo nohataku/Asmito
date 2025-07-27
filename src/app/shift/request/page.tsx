@@ -10,10 +10,12 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Employee as EmployeeType, ShiftRequest } from '@/types'
 import { Employee } from '@/types/employee'
+import Layout from '@/components/layout/Layout'
 
 export default function ShiftRequestPage() {
   const { user, loading } = useAuthStore()
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('')
   const [selectedMethod, setSelectedMethod] = useState<'manual' | 'text' | 'csv'>('manual')
   const [isLoading, setIsLoading] = useState(false)
   const [textInput, setTextInput] = useState('')
@@ -45,6 +47,11 @@ export default function ShiftRequestPage() {
       
       console.log(`従業員データを取得しました: ${employeeList.length}件`, employeeList)
       setEmployees(employeeList)
+      
+      // 最初の従業員を自動選択
+      if (employeeList.length > 0 && !selectedEmployee) {
+        setSelectedEmployee(employeeList[0].id)
+      }
       
       if (employeeList.length === 0) {
         console.warn('該当する従業員が見つかりませんでした')
@@ -90,22 +97,69 @@ export default function ShiftRequestPage() {
     lines.forEach(line => {
       const trimmedLine = line.trim()
       
-      // フォーマット例: "田中 7/26 13:00-18:00" または "田中 7/26 休み"
+      // 新しいフォーマット例: "8/1(金) 休み希望" または "8/4(月) 13:00〜22:00"
       const patterns = [
+        // 新フォーマット - 勤務希望: "8/4(月) 13:00〜22:00"
+        /^(\d{1,2}\/\d{1,2})\([月火水木金土日]\)\s+(\d{1,2}:\d{2})〜(\d{1,2}:\d{2})$/,
+        // 新フォーマット - 勤務希望（ハイフン）: "8/4(月) 13:00-22:00"
+        /^(\d{1,2}\/\d{1,2})\([月火水木金土日]\)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/,
+        // 新フォーマット - 休み希望: "8/1(金) 休み希望"
+        /^(\d{1,2}\/\d{1,2})\([月火水木金土日]\)\s+(休み希望|休み|OFF)$/,
+        
+        // 従来フォーマット（後方互換性のため）
         /^(.+?)\s+(\d{1,2}\/\d{1,2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/,  // 勤務希望
         /^(.+?)\s+(\d{1,2}\/\d{1,2})\s+(休み|休み希望|OFF)$/,  // 休み希望
         /^(.+?)\s+(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/,  // 勤務希望（フルデート）
         /^(.+?)\s+(\d{4}-\d{2}-\d{2})\s+(休み|休み希望|OFF)$/   // 休み希望（フルデート）
       ]
 
-      for (const pattern of patterns) {
+      for (let i = 0; i < patterns.length; i++) {
+        const pattern = patterns[i]
         const match = trimmedLine.match(pattern)
+        
         if (match) {
-          const employeeName = match[1].trim()
-          const dateStr = match[2]
+          let employeeName = ''
+          let dateStr = ''
+          let startTime = ''
+          let endTime = ''
+          let isOff = false
+
+          if (i <= 2) {
+            // 新フォーマットの場合（従業員名を選択可能にする）
+            dateStr = match[1]
+            
+            if (i === 0 || i === 1) {
+              // 勤務希望
+              startTime = match[2]
+              endTime = match[3]
+            } else {
+              // 休み希望
+              isOff = true
+            }
+            
+            // 従業員が1人しかいない場合は自動選択、複数いる場合は選択された従業員を使用
+            if (employees.length > 0) {
+              const targetEmployee = employees.find(emp => emp.id === selectedEmployee) || employees[0]
+              employeeName = targetEmployee.name
+            }
+          } else {
+            // 従来フォーマットの場合
+            employeeName = match[1].trim()
+            dateStr = match[2]
+            
+            if (match[3] && match[4] && !['休み', '休み希望', 'OFF'].includes(match[3])) {
+              // 勤務希望
+              startTime = match[3]
+              endTime = match[4]
+            } else {
+              // 休み希望
+              isOff = true
+            }
+          }
+
           const employee = employees.find(emp => emp.name === employeeName)
           
-          if (employee) {
+          if (employee || (i <= 2 && employees.length > 0)) {
             let date = dateStr
             if (dateStr.includes('/')) {
               // MM/dd 形式を yyyy-MM-dd に変換
@@ -114,24 +168,26 @@ export default function ShiftRequestPage() {
               date = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
             }
 
-            if (match[3] && match[4]) {
+            const selectedEmployeeObj = employee || employees.find(emp => emp.id === selectedEmployee) || employees[0]
+
+            if (!isOff && startTime && endTime) {
               // 勤務希望
               requests.push({
                 id: Date.now().toString() + Math.random(),
-                employeeId: employee.id,
+                employeeId: selectedEmployeeObj.id,
                 date,
-                startTime: match[3],
-                endTime: match[4],
+                startTime,
+                endTime,
                 type: 'work',
                 priority: 'medium',
                 status: 'pending',
                 submittedAt: new Date().toISOString()
               })
-            } else {
+            } else if (isOff) {
               // 休み希望
               requests.push({
                 id: Date.now().toString() + Math.random(),
-                employeeId: employee.id,
+                employeeId: selectedEmployeeObj.id,
                 date,
                 startTime: '',
                 endTime: '',
@@ -200,13 +256,11 @@ export default function ShiftRequestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">シフト希望入力</h1>
+    <Layout>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">シフト希望入力</h1>
 
-          {/* 認証ローディング */}
-          {loading && (
+      {/* 認証ローディング */}
+      {loading && (
             <Card>
               <CardContent className="text-center py-8">
                 <p className="text-gray-500">認証状態を確認中...</p>
@@ -383,19 +437,38 @@ export default function ShiftRequestPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
+                      {/* 従業員選択 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          対象従業員（従業員名を省略した場合に適用されます）
+                        </label>
+                        <select
+                          value={selectedEmployee}
+                          onChange={(e) => setSelectedEmployee(e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-md w-full"
+                        >
+                          {employees.map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
                       <div className="bg-gray-100 p-4 rounded-lg">
                         <h4 className="font-medium mb-2">入力フォーマット例:</h4>
                         <div className="text-sm text-gray-600 space-y-1">
-                          <div>勤務希望: 田中 7/26 13:00-18:00</div>
-                          <div>休み希望: 佐藤 7/27 休み</div>
-                          <div>フルデート: 田中 2025-07-28 09:00-17:00</div>
+                          <div>勤務希望: 8/4(月) 13:00〜22:00</div>
+                          <div>休み希望: 8/1(金) 休み希望</div>
+                          <div>従来形式: 田中 7/26 13:00-18:00</div>
+                          <div className="text-xs text-gray-500 mt-2">
+                            ※ 新形式では従業員名を省略できます（登録済みの従業員から自動選択）
+                          </div>
                         </div>
                       </div>
 
                       <textarea
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
-                        placeholder="シフト希望を入力してください（1行に1つずつ）&#10;例：&#10;田中 7/26 13:00-18:00&#10;佐藤 7/27 休み"
+                        placeholder="シフト希望を入力してください（1行に1つずつ）&#10;例：&#10;8/1(金) 休み希望&#10;8/4(月) 13:00〜22:00&#10;8/5(火) 休み希望"
                         className="w-full h-64 p-3 border border-gray-300 rounded-md resize-none"
                       />
 
@@ -410,8 +483,6 @@ export default function ShiftRequestPage() {
               )}
             </>
           )}
-        </div>
-      </div>
-    </div>
+    </Layout>
   )
 }

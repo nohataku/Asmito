@@ -1,19 +1,22 @@
 'use client';
 
 import { ReactNode } from 'react';
-import Header from './Header';
+import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: ReactNode;
-  showHeader?: boolean;
+  showSidebar?: boolean;
 }
 
-export default function Layout({ children, showHeader = true }: LayoutProps) {
+export default function Layout({ children, showSidebar = true }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
-      {showHeader && <Header />}
-      <main className={showHeader ? '' : 'min-h-screen'}>
-        {children}
+      {showSidebar && <Sidebar />}
+      
+      <main className={`transition-all duration-300 ease-in-out ${showSidebar ? 'lg:ml-64' : ''}`}>
+        <div className="p-6 max-w-5xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
