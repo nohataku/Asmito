@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import GanttChart from '@/components/GanttChart'
 import { Employee, ShiftRequest, Shift } from '@/types'
+import { ShiftOptimizer } from '@/lib/shiftOptimizer'
 import Layout from '@/components/layout/Layout'
 
 interface ScheduleSettings {
@@ -57,16 +58,21 @@ export default function CreateShiftPage() {
     if (!user) return
 
     try {
-      // 従業員データを取得
+      // 従業員データを取得（新しいクエリ条件に対応）
       const employeesQuery = query(
         collection(db, 'employees'),
         where('organizationId', '==', user.uid),
-        where('isActive', '==', true)
+        where('status', '==', 'active') // isActiveからstatusに変更
       )
       const employeesSnapshot = await getDocs(employeesQuery)
       const employeeList: Employee[] = []
       employeesSnapshot.forEach((doc) => {
         employeeList.push({ id: doc.id, ...doc.data() } as Employee)
+      })
+      
+      console.log(`📋 従業員データを取得: ${employeeList.length}名`)
+      employeeList.forEach(emp => {
+        console.log(`  - ${emp.name} (${emp.department}/${emp.position}) ¥${emp.hourlyRate}/h`)
       })
       setEmployees(employeeList)
 
@@ -81,6 +87,11 @@ export default function CreateShiftPage() {
       requestsSnapshot.forEach((doc) => {
         requestsList.push({ id: doc.id, ...doc.data() } as ShiftRequest)
       })
+      
+      console.log(`🗓️ シフト希望を取得: ${requestsList.length}件`)
+      requestsList.slice(0, 5).forEach(req => {
+        console.log(`  - ${req.date} ${req.type} ${req.startTime || ''}-${req.endTime || ''} (${req.priority || 'N/A'})`)
+      })
       setShiftRequests(requestsList)
     } catch (error) {
       console.error('データの取得に失敗しました:', error)
@@ -90,9 +101,19 @@ export default function CreateShiftPage() {
   const generateShifts = async () => {
     setIsGenerating(true)
     try {
-      // 基本的なシフト生成ロジック（簡易版）
-      const shifts = generateBasicShifts()
-      setGeneratedShifts(shifts)
+      console.log('🤖 AIシフト最適化を開始します...')
+      
+      // 新しいAIオプティマイザーを使用
+      const optimizer = new ShiftOptimizer(employees, shiftRequests, settings)
+      const optimizedShifts = optimizer.optimize()
+      
+      console.log(`✅ 最適化完了: ${optimizedShifts.length}件のシフトを生成`)
+      setGeneratedShifts(optimizedShifts)
+      
+      // 最適化結果のサマリーを表示
+      const summary = generateOptimizationSummary(optimizedShifts)
+      console.log('📊 最適化サマリー:', summary)
+      
     } catch (error) {
       console.error('シフト生成に失敗しました:', error)
       alert('シフト生成に失敗しました。')
@@ -101,92 +122,29 @@ export default function CreateShiftPage() {
     }
   }
 
-  const generateBasicShifts = (): Shift[] => {
-    const shifts: Shift[] = []
-    const startDate = new Date(settings.startDate)
-    const endDate = new Date(settings.endDate)
+  const generateOptimizationSummary = (shifts: Shift[]) => {
+    const totalShifts = shifts.length
+    const uniqueEmployees = new Set(shifts.map(s => s.employeeId)).size
+    const totalHours = shifts.reduce((total, shift) => {
+      return total + calculateShiftDuration(shift.startTime, shift.endTime)
+    }, 0)
     
-    // 日付範囲をループ
-    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      const dateString = date.toISOString().split('T')[0]
-      
-      // その日のシフト希望を取得
-      const dayRequests = shiftRequests.filter(req => req.date === dateString && req.type === 'work')
-      const offRequests = shiftRequests.filter(req => req.date === dateString && req.type === 'off')
-      
-      // 休み希望の従業員を除外
-      const availableEmployees = employees.filter(emp => 
-        !offRequests.some(req => req.employeeId === emp.id)
-      )
-
-      // シフト希望がある従業員を優先的に配置
-      const workRequests = dayRequests.sort((a, b) => {
-        const priorityOrder = { high: 3, medium: 2, low: 1 }
-        return priorityOrder[b.priority] - priorityOrder[a.priority]
-      })
-
-      // 希望時間に基づいてシフトを作成
-      workRequests.forEach(request => {
-        if (request.startTime && request.endTime) {
-          shifts.push({
-            id: `shift_${Date.now()}_${Math.random()}`,
-            employeeId: request.employeeId,
-            date: dateString,
-            startTime: request.startTime,
-            endTime: request.endTime,
-            position: 'staff',
-            isConfirmed: false,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          })
-        }
-      })
-
-      // 希望がない時間帯の最低人数を確保
-      const operatingStart = parseInt(settings.operatingHours.start.split(':')[0])
-      const operatingEnd = parseInt(settings.operatingHours.end.split(':')[0])
-      
-      for (let hour = operatingStart; hour < operatingEnd; hour++) {
-        const timeSlot = `${hour.toString().padStart(2, '0')}:00`
-        const currentShifts = shifts.filter(shift => 
-          shift.date === dateString &&
-          parseInt(shift.startTime.split(':')[0]) <= hour &&
-          parseInt(shift.endTime.split(':')[0]) > hour
-        )
-
-        // 最低人数に満たない場合、利用可能な従業員から補充
-        if (currentShifts.length < settings.minStaffPerHour) {
-          const needed = settings.minStaffPerHour - currentShifts.length
-          const assignedEmployeeIds = currentShifts.map(s => s.employeeId)
-          const unassignedEmployees = availableEmployees.filter(emp => 
-            !assignedEmployeeIds.includes(emp.id)
-          )
-
-          for (let i = 0; i < Math.min(needed, unassignedEmployees.length); i++) {
-            const employee = unassignedEmployees[i]
-            shifts.push({
-              id: `shift_${Date.now()}_${Math.random()}`,
-              employeeId: employee.id,
-              date: dateString,
-              startTime: timeSlot,
-              endTime: `${Math.min(hour + settings.constraints.maxHoursPerDay, operatingEnd).toString().padStart(2, '0')}:00`,
-              position: 'staff',
-              isConfirmed: false,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            })
-          }
-        }
-      }
+    const avgHoursPerEmployee = uniqueEmployees > 0 ? totalHours / uniqueEmployees : 0
+    
+    return {
+      totalShifts,
+      uniqueEmployees,
+      totalHours: Math.round(totalHours * 100) / 100,
+      avgHoursPerEmployee: Math.round(avgHoursPerEmployee * 100) / 100
     }
-
-    return shifts
   }
 
   const saveShifts = async () => {
     if (!user || generatedShifts.length === 0) return
 
     try {
+      console.log('💾 シフトを保存中...')
+      
       // スケジュールを保存
       const scheduleDoc = await addDoc(collection(db, 'schedules'), {
         organizationId: user.uid,
@@ -194,6 +152,8 @@ export default function CreateShiftPage() {
         endDate: settings.endDate,
         status: 'draft',
         createdBy: user.uid,
+        aiGenerated: true, // AI生成フラグ
+        optimizationScore: generateOptimizationSummary(generatedShifts),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       })
@@ -209,7 +169,7 @@ export default function CreateShiftPage() {
         })
       }
 
-      alert('シフトが正常に保存されました。')
+      alert('✅ AIで最適化されたシフトが正常に保存されました。')
       setGeneratedShifts([])
     } catch (error) {
       console.error('シフトの保存に失敗しました:', error)
@@ -364,7 +324,14 @@ export default function CreateShiftPage() {
                   disabled={isGenerating || !settings.startDate || !settings.endDate}
                   className="w-full"
                 >
-                  {isGenerating ? 'AI最適化中...' : 'AIシフト生成'}
+                  {isGenerating ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      🤖 AI最適化中...
+                    </div>
+                  ) : (
+                    '🚀 AIシフト生成'
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -389,12 +356,29 @@ export default function CreateShiftPage() {
                     <span className="font-medium">生成済みシフト</span>
                     <span className="text-2xl font-bold text-purple-600">{generatedShifts.length}</span>
                   </div>
+                  
+                  {generatedShifts.length > 0 && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                      <h4 className="font-medium text-green-800 mb-2">🤖 AI最適化結果</h4>
+                      {(() => {
+                        const summary = generateOptimizationSummary(generatedShifts)
+                        return (
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>総シフト数: <span className="font-bold">{summary.totalShifts}</span></div>
+                            <div>参加従業員: <span className="font-bold">{summary.uniqueEmployees}名</span></div>
+                            <div>総労働時間: <span className="font-bold">{summary.totalHours}h</span></div>
+                            <div>平均時間/人: <span className="font-bold">{summary.avgHoursPerEmployee}h</span></div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  )}
                 </div>
 
                 {generatedShifts.length > 0 && (
                   <div className="mt-6 pt-4 border-t">
-                    <Button onClick={saveShifts} className="w-full">
-                      シフトを保存
+                    <Button onClick={saveShifts} className="w-full bg-green-600 hover:bg-green-700">
+                      💾 AIシフトを保存
                     </Button>
                   </div>
                 )}
