@@ -10,6 +10,7 @@ import Layout from '@/components/layout/Layout'
 export default function DashboardPage() {
   const { user, loading } = useAuthStore()
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const [stats, setStats] = useState({
     totalEmployees: 0,
     activeShifts: 0,
@@ -18,10 +19,19 @@ export default function DashboardPage() {
   })
 
   useEffect(() => {
-    if (!loading && !user) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted && !loading && !user) {
       router.push('/auth/login')
     }
-  }, [user, loading, router])
+  }, [user, loading, router, mounted])
+
+  // サーバーサイドレンダリング時やマウント前は何も表示しない
+  if (!mounted) {
+    return null
+  }
 
   if (loading) {
     return (

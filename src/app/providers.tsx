@@ -10,6 +10,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore()
 
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user)
       setLoading(false)
