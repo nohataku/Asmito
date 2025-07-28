@@ -49,7 +49,7 @@ export interface Employee {
   hourlyRate: number
   maxHoursPerWeek?: number
   maxDaysPerWeek?: number
-  isActive: boolean
+  status: 'active' | 'inactive' | 'suspended'
   skills?: string[]
   availability?: Availability[]
   constraints?: Constraint[]

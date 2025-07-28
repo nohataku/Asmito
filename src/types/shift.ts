@@ -62,13 +62,15 @@ export interface Shift {
   startTime: string; // HH:mm format
   endTime: string;   // HH:mm format
   breakTime?: number; // minutes
-  position: string;
-  department: string;
-  hourlyRate: number;
+  position?: string;
+  department?: string;
+  hourlyRate?: number;
   isConfirmed: boolean;
   notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  scheduleId?: string;
+  organizationId?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface WeeklyShift {

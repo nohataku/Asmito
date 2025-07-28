@@ -31,6 +31,10 @@ interface SystemSettings {
     maxWeeklyHours: number
     maxMonthlyHours: number
   }
+  assignmentPolicy: {
+    allowUnrequestedAssignment: boolean
+    prioritizeRequested: boolean
+  }
   notifications: {
     emailNotifications: boolean
     smsNotifications: boolean
@@ -70,6 +74,10 @@ const defaultSettings: SystemSettings = {
     minRestHours: 8,
     maxWeeklyHours: 40,
     maxMonthlyHours: 160
+  },
+  assignmentPolicy: {
+    allowUnrequestedAssignment: true,
+    prioritizeRequested: true
   },
   notifications: {
     emailNotifications: true,
@@ -353,6 +361,38 @@ export default function SettingsPage() {
               />
               リクエスト通知を有効にする
             </label>
+          </div>
+        </Card>
+
+        {/* シフト割り当てポリシー */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">📋 シフト割り当てポリシー</h2>
+          <div className="space-y-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={settings.assignmentPolicy.allowUnrequestedAssignment}
+                onChange={(e) => updateSettings('assignmentPolicy.allowUnrequestedAssignment', e.target.checked)}
+                className="mr-2"
+              />
+              シフト希望未提出者への割り当てを許可する
+            </label>
+            <p className="text-sm text-gray-600 ml-6">
+              チェックを外すと、シフト希望を提出した従業員のみがシフトに割り当てられます。
+            </p>
+            
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={settings.assignmentPolicy.prioritizeRequested}
+                onChange={(e) => updateSettings('assignmentPolicy.prioritizeRequested', e.target.checked)}
+                className="mr-2"
+              />
+              シフト希望提出者を優先する
+            </label>
+            <p className="text-sm text-gray-600 ml-6">
+              シフト希望を提出した従業員を優先的に割り当てます。
+            </p>
           </div>
         </Card>
 

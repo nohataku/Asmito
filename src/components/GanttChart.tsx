@@ -1,18 +1,26 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Employee, Shift } from '@/types'
+import { Shift } from '@/types/shift'
+import { Employee } from '@/types/employee'
 import { Button } from './ui/Button'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+import ShiftEditModal from './shift/ShiftEditModal'
 
 interface GanttChartProps {
   shifts: Shift[]
   employees: Employee[]
   startDate: string
   endDate: string
+  operatingHours?: {
+    start: string
+    end: string
+  }
+  onShiftUpdate?: (updatedShift: Shift) => void
+  onShiftDelete?: (shiftId: string) => void
 }
 
 interface ExportOptions {
@@ -22,7 +30,15 @@ interface ExportOptions {
   includeStatistics: boolean
 }
 
-export default function GanttChart({ shifts, employees, startDate, endDate }: GanttChartProps) {
+export default function GanttChart({ 
+  shifts, 
+  employees, 
+  startDate, 
+  endDate, 
+  operatingHours = { start: '06:00', end: '24:00' },
+  onShiftUpdate,
+  onShiftDelete
+}: GanttChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     format: 'png',
@@ -32,12 +48,40 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
   })
   const [showExportModal, setShowExportModal] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
+  const [showShiftEditModal, setShowShiftEditModal] = useState(false)
 
   // 日付範囲を生成
   const dateRange = generateDateRange(startDate, endDate)
   
-  // 時間範囲（6:00-24:00）
-  const timeRange = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`)
+  // 営業時間に基づいて時間範囲を動的生成
+  const generateTimeRange = (start: string, end: string) => {
+    const startHour = parseInt(start.split(':')[0])
+    const endHour = parseInt(end.split(':')[0])
+    
+    // 24時間を超える場合（例: 22:00-06:00）
+    if (endHour <= startHour) {
+      const range = []
+      // 開始時間から24時まで
+      for (let i = startHour; i < 24; i++) {
+        range.push(`${i.toString().padStart(2, '0')}:00`)
+      }
+      // 0時から終了時間まで
+      for (let i = 0; i <= endHour; i++) {
+        range.push(`${i.toString().padStart(2, '0')}:00`)
+      }
+      return range
+    } else {
+      // 通常の営業時間
+      const range = []
+      for (let i = startHour; i <= endHour; i++) {
+        range.push(`${i.toString().padStart(2, '0')}:00`)
+      }
+      return range
+    }
+  }
+  
+  const timeRange = generateTimeRange(operatingHours.start, operatingHours.end)
 
   const exportAsImage = async (format: 'png' | 'jpeg') => {
     if (!chartRef.current) return
@@ -105,7 +149,7 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
         return {
           日付: shift.date,
           従業員名: employee?.name || '不明',
-          従業員ID: employee?.employeeId || '',
+          従業員ID: employee?.id || '',
           開始時間: shift.startTime,
           終了時間: shift.endTime,
           勤務時間: calculateShiftDuration(shift.startTime, shift.endTime),
@@ -126,7 +170,7 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
           
           return {
             従業員名: employee.name,
-            従業員ID: employee.employeeId,
+            従業員ID: employee.id,
             シフト日数: employeeShifts.length,
             総勤務時間: totalHours,
             平均勤務時間: employeeShifts.length > 0 ? (totalHours / employeeShifts.length).toFixed(1) : 0,
@@ -156,7 +200,7 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
         return [
           shift.date,
           employee?.name || '不明',
-          employee?.employeeId || '',
+          employee?.id || '',
           shift.startTime,
           shift.endTime,
           calculateShiftDuration(shift.startTime, shift.endTime),
@@ -198,6 +242,23 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
     setShowExportModal(false)
   }
 
+  const handleShiftClick = (shift: Shift) => {
+    setSelectedShift(shift)
+    setShowShiftEditModal(true)
+  }
+
+  const handleShiftUpdate = (updatedShift: Shift) => {
+    if (onShiftUpdate) {
+      onShiftUpdate(updatedShift)
+    }
+  }
+
+  const handleShiftDelete = (shiftId: string) => {
+    if (onShiftDelete) {
+      onShiftDelete(shiftId)
+    }
+  }
+
   const getShiftForEmployeeAndTime = (employeeId: string, date: string, time: string) => {
     return shifts.find(shift => {
       if (shift.employeeId !== employeeId || shift.date !== date) return false
@@ -213,11 +274,17 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
   const getShiftBarStyle = (shift: Shift, date: string) => {
     const startTime = timeToMinutes(shift.startTime)
     const endTime = timeToMinutes(shift.endTime)
-    const dayStart = timeToMinutes('06:00')
-    const dayEnd = timeToMinutes('24:00')
+    const dayStart = timeToMinutes(operatingHours.start)
+    const dayEnd = timeToMinutes(operatingHours.end)
     
-    const left = ((startTime - dayStart) / (dayEnd - dayStart)) * 100
-    const width = ((endTime - startTime) / (dayEnd - dayStart)) * 100
+    // 営業時間が日をまたぐ場合の処理
+    let actualDayEnd = dayEnd
+    if (dayEnd <= dayStart) {
+      actualDayEnd = dayEnd + 24 * 60
+    }
+    
+    const left = ((startTime - dayStart) / (actualDayEnd - dayStart)) * 100
+    const width = ((endTime - startTime) / (actualDayEnd - dayStart)) * 100
     
     return {
       left: `${Math.max(0, left)}%`,
@@ -245,69 +312,107 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
           </p>
         </div>
 
-        {/* タイムヘッダー */}
-        <div className="grid grid-cols-[200px_1fr] border-b">
-          <div className="p-3 bg-gray-100 border-r">
-            <strong>従業員 / 時間</strong>
-          </div>
-          <div className="flex text-xs">
-            {timeRange.map(time => (
-              <div key={time} className="flex-1 p-2 text-center border-r border-gray-200 bg-gray-100 min-w-[60px]">
-                {time}
+        {/* スクロール可能コンテナ */}
+        <div className="overflow-x-auto">
+          <div className="min-w-max">
+            {/* タイムヘッダー */}
+            <div className="grid grid-cols-[200px_1fr] border-b">
+              <div className="p-3 bg-gray-100 border-r">
+                <strong>従業員 / 時間</strong>
+              </div>
+              <div className="flex text-xs">
+                {timeRange.map(time => (
+                  <div key={time} className="flex-none p-2 text-center border-r border-gray-200 bg-gray-100 w-20">
+                    {time}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 日付ヘッダー */}
+            {dateRange.map(date => (
+              <div key={date}>
+                <div className="grid grid-cols-[200px_1fr] border-b bg-blue-50">
+                  <div className="p-2 bg-blue-100 border-r font-medium">
+                    {new Date(date).toLocaleDateString('ja-JP', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      weekday: 'short'
+                    })}
+                  </div>
+                  <div className="h-8 flex">
+                    {timeRange.map(time => (
+                      <div key={time} className="flex-none w-20 border-r border-gray-200"></div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 従業員行 */}
+                {employees.map(employee => (
+                  <div key={`${employee.id}-${date}`} className="grid grid-cols-[200px_1fr] border-b hover:bg-gray-50">
+                    <div className="p-3 border-r">
+                      <div className="font-medium text-sm">{employee.name}</div>
+                      <div className="text-xs text-gray-500">{employee.department}</div>
+                    </div>
+                    <div className="relative h-12 flex">
+                      {/* 時間グリッド */}
+                      {timeRange.map((time, index) => (
+                        <div key={time} className="flex-none w-20 border-r border-gray-100 h-full relative">
+                          {/* シフトバー（この時間帯に含まれる場合のみ表示） */}
+                          {shifts
+                            .filter(shift => {
+                              if (shift.employeeId !== employee.id || shift.date !== date) return false
+                              const shiftStart = timeToMinutes(shift.startTime)
+                              const shiftEnd = timeToMinutes(shift.endTime)
+                              const timeStart = timeToMinutes(time)
+                              const timeEnd = timeStart + 60
+                              return shiftStart < timeEnd && shiftEnd > timeStart
+                            })
+                            .map((shift, shiftIndex) => {
+                              const shiftStart = timeToMinutes(shift.startTime)
+                              const shiftEnd = timeToMinutes(shift.endTime)
+                              const timeStart = timeToMinutes(time)
+                              const timeEnd = timeStart + 60
+                              
+                              // この時間帯でのシフトバーの位置とサイズを計算
+                              const overlapStart = Math.max(shiftStart, timeStart)
+                              const overlapEnd = Math.min(shiftEnd, timeEnd)
+                              const overlapDuration = overlapEnd - overlapStart
+                              
+                              if (overlapDuration <= 0) return null
+                              
+                              const leftPercent = ((overlapStart - timeStart) / 60) * 100
+                              const widthPercent = (overlapDuration / 60) * 100
+                              
+                              return (
+                                <div
+                                  key={shiftIndex}
+                                  className="absolute top-1 bottom-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs rounded px-1 flex items-center justify-center z-10 overflow-hidden cursor-pointer transition-colors"
+                                  style={{
+                                    left: `${leftPercent}%`,
+                                    width: `${widthPercent}%`
+                                  }}
+                                  title={`${shift.startTime} - ${shift.endTime} (クリックで編集)`}
+                                  onClick={() => handleShiftClick(shift)}
+                                >
+                                  {/* 開始時刻のみの時間帯では時間を表示 */}
+                                  {timeToMinutes(time) === shiftStart && (
+                                    <span className="truncate text-[10px] leading-tight">
+                                      {shift.startTime.slice(0, 5)}-{shift.endTime.slice(0, 5)}
+                                    </span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
         </div>
-
-        {/* 日付ヘッダー */}
-        {dateRange.map(date => (
-          <div key={date}>
-            <div className="grid grid-cols-[200px_1fr] border-b bg-blue-50">
-              <div className="p-2 bg-blue-100 border-r font-medium">
-                {new Date(date).toLocaleDateString('ja-JP', { 
-                  month: 'short', 
-                  day: 'numeric',
-                  weekday: 'short'
-                })}
-              </div>
-              <div className="h-8"></div>
-            </div>
-
-            {/* 従業員行 */}
-            {employees.map(employee => (
-              <div key={`${employee.id}-${date}`} className="grid grid-cols-[200px_1fr] border-b hover:bg-gray-50">
-                <div className="p-3 border-r">
-                  <div className="font-medium text-sm">{employee.name}</div>
-                  <div className="text-xs text-gray-500">{employee.department}</div>
-                </div>
-                <div className="relative h-12">
-                  {/* 時間グリッド */}
-                  <div className="absolute inset-0 flex">
-                    {timeRange.map((time, index) => (
-                      <div key={time} className="flex-1 border-r border-gray-100 h-full min-w-[60px]"></div>
-                    ))}
-                  </div>
-                  
-                  {/* シフトバー */}
-                  {shifts
-                    .filter(shift => shift.employeeId === employee.id && shift.date === date)
-                    .map((shift, index) => (
-                      <div
-                        key={index}
-                        className="absolute top-1 bottom-1 bg-indigo-500 text-white text-xs rounded px-1 flex items-center justify-center z-10 overflow-hidden"
-                        style={getShiftBarStyle(shift, date)}
-                        title={`${shift.startTime} - ${shift.endTime}`}
-                      >
-                        <span className="truncate text-[10px] leading-tight">
-                          {shift.startTime.slice(0, 5)}-{shift.endTime.slice(0, 5)}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
 
         {/* 統計情報 */}
         {exportOptions.includeStatistics && (
@@ -423,6 +528,19 @@ export default function GanttChart({ shifts, employees, startDate, endDate }: Ga
           </div>
         </div>
       )}
+
+      {/* シフト編集モーダル */}
+      <ShiftEditModal
+        shift={selectedShift}
+        employees={employees}
+        isOpen={showShiftEditModal}
+        onClose={() => {
+          setShowShiftEditModal(false)
+          setSelectedShift(null)
+        }}
+        onSave={handleShiftUpdate}
+        onDelete={handleShiftDelete}
+      />
     </div>
   )
 }
@@ -443,6 +561,12 @@ function generateDateRange(startDate: string, endDate: string): string[] {
 function timeToMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number)
   return hours * 60 + minutes
+}
+
+function minutesToTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60) % 24
+  const mins = Math.floor(minutes % 60)
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
 }
 
 function calculateShiftDuration(startTime: string, endTime: string): number {

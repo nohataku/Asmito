@@ -27,6 +27,10 @@ interface OptimizationSettings {
     maxDaysPerWeek: number
     minRestHours: number
   }
+  assignmentPolicy?: {
+    allowUnrequestedAssignment: boolean
+    prioritizeRequested: boolean
+  }
 }
 
 interface ShiftCandidate {
@@ -38,11 +42,21 @@ interface ShiftCandidate {
   conflicts: string[]
 }
 
+interface StaffingShortage {
+  date: string
+  timeSlot: string
+  requiredStaff: number
+  availableStaff: number
+  shortage: number
+  hasRequests: boolean
+}
+
 export class ShiftOptimizer {
   private employees: ExtendedEmployee[]
   private shiftRequests: ShiftRequest[]
   private settings: OptimizationSettings
   private generatedShifts: Shift[] = []
+  private staffingShortages: StaffingShortage[] = []
 
   constructor(employees: Employee[], shiftRequests: ShiftRequest[], settings: OptimizationSettings) {
     // Employee型をExtendedEmployee型にキャスト
@@ -61,9 +75,11 @@ export class ShiftOptimizer {
     console.log(`  営業時間: ${this.settings.operatingHours.start} ～ ${this.settings.operatingHours.end}`)
     console.log(`  必要人数: ${this.settings.minStaffPerHour}名 ～ ${this.settings.maxStaffPerHour}名/時間`)
     console.log(`  制約: 最大${this.settings.constraints.maxHoursPerDay}h/日, 週${this.settings.constraints.maxDaysPerWeek}日, 休憩${this.settings.constraints.minRestHours}h`)
+    console.log(`  割り当てポリシー: 未提出者への割り当て${this.settings.assignmentPolicy?.allowUnrequestedAssignment ? '許可' : '禁止'}, 希望者優先${this.settings.assignmentPolicy?.prioritizeRequested ? 'ON' : 'OFF'}`)
     console.log(`  従業員: ${this.employees.length}名, シフト希望: ${this.shiftRequests.length}件`)
     
     this.generatedShifts = []
+    this.staffingShortages = []
     
     // 1. 日付ごとに処理
     const dates = this.generateDateRange()
@@ -71,6 +87,7 @@ export class ShiftOptimizer {
     for (const date of dates) {
       console.log(`📅 ${date} のシフト最適化中...`)
       this.optimizeDay(date)
+      this.checkStaffingShortages(date)
     }
 
     // 2. 週次制約をチェックして調整
@@ -79,6 +96,9 @@ export class ShiftOptimizer {
     // 3. 最終スコア計算とレポート
     const score = this.calculateOverallScore()
     console.log(`✅ 最適化完了 - 総合スコア: ${score.toFixed(2)}`)
+
+    // 4. 欠員レポート
+    this.reportStaffingShortages()
 
     return this.generatedShifts
   }
@@ -95,8 +115,8 @@ export class ShiftOptimizer {
     )
     const unavailableEmployeeIds = offRequests.map(req => req.employeeId)
     
-    // 利用可能な従業員
-    const availableEmployees = this.employees.filter(emp => 
+    // 利用可能な従業員をポリシーに基づいてフィルタリング
+    let availableEmployees = this.employees.filter(emp => 
       !unavailableEmployeeIds.includes(emp.id)
     ) as ExtendedEmployee[]
 
@@ -105,27 +125,41 @@ export class ShiftOptimizer {
       req.date === date && req.type === 'work'
     )
 
+    // シフト希望未提出者への割り当てを禁止する場合
+    if (!this.settings.assignmentPolicy?.allowUnrequestedAssignment) {
+      const requestedEmployeeIds = workRequests.map(req => req.employeeId)
+      const originalCount = availableEmployees.length
+      availableEmployees = availableEmployees.filter(emp => 
+        requestedEmployeeIds.includes(emp.id)
+      )
+      console.log(`🚫 シフト希望未提出者を除外: ${originalCount}名 → ${availableEmployees.length}名`)
+    }
+
     console.log(`📋 ${date}: 利用可能従業員${availableEmployees.length}名、勤務希望${workRequests.length}件、休み希望${offRequests.length}件`)
 
-    // 時間帯ごとに最適化
-    const operatingStart = this.timeToMinutes(this.settings.operatingHours.start)
-    const operatingEnd = this.timeToMinutes(this.settings.operatingHours.end)
-    
-    console.log(`🕐 営業時間: ${this.settings.operatingHours.start} - ${this.settings.operatingHours.end} (${operatingStart}分 - ${operatingEnd}分)`)
-    
-    // 24時間営業または日をまたぐ営業時間の場合の処理
-    let actualEnd = operatingEnd
-    if (operatingEnd <= operatingStart) {
-      // 24時間営業の場合（例: 06:00 - 05:59）
-      actualEnd = operatingEnd + 24 * 60 // 翌日の時間として扱う
-      console.log(`🌙 24時間営業モード: 実際の終了時間 ${actualEnd}分 (翌日${this.minutesToTime(operatingEnd)})`)
+    // シフト希望が提出されている時間帯のみを処理
+    const requestedTimeSlots = new Set<string>()
+    workRequests.forEach(req => {
+      if (req.startTime) {
+        // 時刻を時間単位に正規化（例: "09:30" → "09:00"）
+        const hour = req.startTime.split(':')[0]
+        requestedTimeSlots.add(`${hour}:00`)
+        console.log(`� シフト希望時間帯: ${req.startTime} → ${hour}:00`)
+      }
+    })
+
+    if (requestedTimeSlots.size === 0) {
+      console.log(`📋 ${date}: シフト希望時間帯がないため、スキップします`)
+      return
     }
+
+    console.log(`🕐 ${date}: シフト希望のある時間帯: ${Array.from(requestedTimeSlots).sort().join(', ')}`)
     
-    // 1時間単位で処理
-    for (let time = operatingStart; time < actualEnd; time += 60) {
-      const timeStr = this.minutesToTime(time % (24 * 60)) // 24時間でループ
-      console.log(`⏰ ${timeStr}の時間帯を最適化中...`)
-      this.optimizeTimeSlot(date, time, availableEmployees, workRequests)
+    // シフト希望がある時間帯のみ最適化
+    for (const timeSlot of Array.from(requestedTimeSlots).sort()) {
+      const timeMinutes = this.timeToMinutes(timeSlot)
+      console.log(`⏰ ${timeSlot}の時間帯を最適化中（シフト希望あり）...`)
+      this.optimizeTimeSlot(date, timeMinutes, availableEmployees, workRequests)
     }
   }
 
@@ -141,6 +175,22 @@ export class ShiftOptimizer {
     // 24時間でモジュロを取って正規化
     const normalizedStartTime = startTimeMinutes % (24 * 60)
     const startTime = this.minutesToTime(normalizedStartTime)
+    
+    // この時間帯での勤務希望があるかチェック
+    const timeSlotRequests = workRequests.filter(req => {
+      if (!req.startTime) return false
+      const reqHour = req.startTime.split(':')[0]
+      const slotHour = startTime.split(':')[0]
+      return reqHour === slotHour
+    })
+
+    if (timeSlotRequests.length === 0) {
+      console.log(`📋 ${date} ${startTime}: この時間帯にシフト希望がないためスキップ`)
+      return
+    }
+
+    console.log(`📝 ${date} ${startTime}: ${timeSlotRequests.length}件のシフト希望あり`)
+
     const maxShiftHours = this.settings.constraints.maxHoursPerDay
     const endTimeMinutes = normalizedStartTime + (maxShiftHours * 60)
     
@@ -167,17 +217,24 @@ export class ShiftOptimizer {
         shiftEnd > checkTime
     }).length
 
-    // 必要な追加人数
-    const neededStaff = Math.max(0, this.settings.minStaffPerHour - currentStaff)
+    // シフト希望がある場合、希望者の数を基準にする
+    const neededStaff = Math.min(
+      timeSlotRequests.length, // 希望者数まで
+      Math.max(0, this.settings.minStaffPerHour - currentStaff) // 最小必要人数
+    )
     
-    console.log(`⏰ ${date} ${startTime}: 現在${currentStaff}名、必要${neededStaff}名追加`)
+    console.log(`⏰ ${date} ${startTime}: 現在${currentStaff}名、希望者${timeSlotRequests.length}名、必要${neededStaff}名追加`)
     
     if (neededStaff === 0) return
 
-    // 候補者をスコアリング
+    // 候補者をスコアリング（希望者を優先）
     const candidates: ShiftCandidate[] = []
     
-    for (const employee of availableEmployees) {
+    // まず希望者から候補を作成
+    for (const request of timeSlotRequests) {
+      const employee = availableEmployees.find(emp => emp.id === request.employeeId)
+      if (!employee) continue
+
       // 既にその日に働いているかチェック
       const alreadyWorking = this.generatedShifts.some(shift => 
         shift.date === date && shift.employeeId === employee.id
@@ -188,7 +245,7 @@ export class ShiftOptimizer {
       // 制約チェック
       const conflicts = this.checkConstraints(employee.id, date, startTime, endTime)
       
-      console.log(`👤 ${employee.name}: 制約チェック結果 - ${conflicts.length > 0 ? conflicts.join(', ') : '問題なし'}`)
+      console.log(`👤 ${employee.name} (希望者): 制約チェック結果 - ${conflicts.length > 0 ? conflicts.join(', ') : '問題なし'}`)
       
       if (conflicts.length === 0) {
         const score = this.calculateCandidateScore(employee, date, startTime, workRequests)
@@ -204,7 +261,7 @@ export class ShiftOptimizer {
       }
     }
 
-    console.log(`📊 候補者${candidates.length}名から${Math.min(neededStaff, candidates.length)}名選択`)
+    console.log(`📊 希望者候補${candidates.length}名から${Math.min(neededStaff, candidates.length)}名選択`)
 
     // スコア順にソートして最適な候補を選択
     candidates.sort((a, b) => b.score - a.score)
@@ -251,6 +308,17 @@ export class ShiftOptimizer {
     if (request) {
       const priorityBonus = { high: 50, medium: 30, low: 10 }
       score += priorityBonus[request.priority] || 0
+    }
+
+    // 2.5. 希望者優先ポリシーによる大幅な加点
+    if (this.settings.assignmentPolicy?.prioritizeRequested) {
+      const hasAnyRequest = workRequests.some(req => req.employeeId === employee.id)
+      if (hasAnyRequest) {
+        score += 200 // シフト希望を提出している場合は大幅加点
+        console.log(`  🌟 ${employee.name}: 希望者優先により+200点`)
+      } else {
+        console.log(`  ⭐ ${employee.name}: シフト希望なし`)
+      }
     }
 
     // 3. 時給の逆比例（コスト最適化）
@@ -371,6 +439,111 @@ export class ShiftOptimizer {
         }
       }
     }
+  }
+
+  /**
+   * 欠員チェック
+   */
+  private checkStaffingShortages(date: string) {
+    console.log(`🔍 ${date} の欠員チェック開始...`)
+    
+    const operatingStart = this.timeToMinutes(this.settings.operatingHours.start)
+    const operatingEnd = this.timeToMinutes(this.settings.operatingHours.end)
+    
+    // 24時間営業または日をまたぐ営業時間の場合の処理
+    let actualEnd = operatingEnd
+    if (operatingEnd <= operatingStart) {
+      actualEnd = operatingEnd + 24 * 60
+    }
+    
+    // その日の勤務希望
+    const workRequests = this.shiftRequests.filter(req => 
+      req.date === date && req.type === 'work'
+    )
+    
+    // 1時間単位で欠員チェック
+    for (let time = operatingStart; time < actualEnd; time += 60) {
+      const timeStr = this.minutesToTime(time % (24 * 60))
+      
+      // その時間帯で働いている人数
+      const currentStaff = this.generatedShifts.filter(shift => {
+        const shiftStart = this.timeToMinutes(shift.startTime)
+        const shiftEnd = this.timeToMinutes(shift.endTime)
+        const checkTime = time % (24 * 60)
+        
+        return shift.date === date &&
+          shiftStart <= checkTime &&
+          shiftEnd > checkTime
+      }).length
+      
+      // その時間帯のシフト希望があるか
+      const hasRequests = workRequests.some(req => {
+        if (!req.startTime) return false
+        const reqHour = req.startTime.split(':')[0]
+        const timeHour = timeStr.split(':')[0]
+        return reqHour === timeHour
+      })
+      
+      // 欠員判定
+      const shortage = this.settings.minStaffPerHour - currentStaff
+      if (shortage > 0) {
+        this.staffingShortages.push({
+          date,
+          timeSlot: timeStr,
+          requiredStaff: this.settings.minStaffPerHour,
+          availableStaff: currentStaff,
+          shortage,
+          hasRequests
+        })
+        
+        const requestStatus = hasRequests ? '（シフト希望あり）' : '（シフト希望なし）'
+        console.log(`⚠️ 欠員: ${date} ${timeStr} - 必要${this.settings.minStaffPerHour}名/現在${currentStaff}名/不足${shortage}名 ${requestStatus}`)
+      }
+    }
+  }
+
+  /**
+   * 欠員レポート
+   */
+  private reportStaffingShortages() {
+    if (this.staffingShortages.length === 0) {
+      console.log('✅ 欠員なし - すべての時間帯で最小人数を確保できています')
+      return
+    }
+    
+    console.log(`⚠️ 欠員レポート: ${this.staffingShortages.length}件の欠員が発生`)
+    
+    // 日付別にグループ化
+    const shortagesByDate = this.staffingShortages.reduce((acc, shortage) => {
+      if (!acc[shortage.date]) acc[shortage.date] = []
+      acc[shortage.date].push(shortage)
+      return acc
+    }, {} as Record<string, StaffingShortage[]>)
+    
+    Object.entries(shortagesByDate).forEach(([date, shortages]) => {
+      console.log(`📅 ${date}:`)
+      shortages.forEach(shortage => {
+        const requestStatus = shortage.hasRequests ? '（希望あり）' : '（希望なし）'
+        console.log(`  ${shortage.timeSlot}: ${shortage.shortage}名不足 ${requestStatus}`)
+      })
+    })
+    
+    // 統計情報
+    const totalShortage = this.staffingShortages.reduce((sum, s) => sum + s.shortage, 0)
+    const shortagesWithRequests = this.staffingShortages.filter(s => s.hasRequests).length
+    const shortagesWithoutRequests = this.staffingShortages.filter(s => !s.hasRequests).length
+    
+    console.log(`📊 欠員統計:`)
+    console.log(`  総欠員数: ${totalShortage}名`)
+    console.log(`  シフト希望ありの欠員: ${shortagesWithRequests}件`)
+    console.log(`  シフト希望なしの欠員: ${shortagesWithoutRequests}件`)
+  }
+
+  /**
+   * 欠員情報を取得
+   */
+  getStaffingShortages(): StaffingShortage[] {
+    return this.staffingShortages
   }
 
   /**

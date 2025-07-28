@@ -1,14 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, where, orderBy, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import GanttChart from '@/components/GanttChart'
-import { Employee, Shift, Schedule } from '@/types'
+import ShiftCreateModal from '@/components/shift/ShiftCreateModal'
+import ShiftBulkEditModal from '@/components/shift/ShiftBulkEditModal'
+import { Employee } from '@/types/employee'
+import { Shift } from '@/types/shift'
+import { Schedule } from '@/types'
 import Layout from '@/components/layout/Layout'
 
 export default function ShiftViewPage() {
@@ -17,15 +21,43 @@ export default function ShiftViewPage() {
   const [shifts, setShifts] = useState<Shift[]>([])
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
+  const [operatingHours, setOperatingHours] = useState({
+    start: '09:00',
+    end: '21:00'
+  })
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: ''
   })
   const [loading, setLoading] = useState(true)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false)
 
   useEffect(() => {
+    loadSettings()
     fetchData()
   }, [user])
+
+  const loadSettings = async () => {
+    if (!user) return
+
+    try {
+      // システム設定を取得
+      const settingsDoc = await getDoc(doc(db, 'settings', 'system'))
+      
+      if (settingsDoc.exists()) {
+        const systemSettings = settingsDoc.data()
+        console.log('📋 システム設定を読み込みました:', systemSettings)
+        
+        setOperatingHours({
+          start: systemSettings.workSettings?.operatingHours?.start || '09:00',
+          end: systemSettings.workSettings?.operatingHours?.end || '21:00'
+        })
+      }
+    } catch (error) {
+      console.error('設定の読み込みに失敗しました:', error)
+    }
+  }
 
   const fetchData = async () => {
     if (!user) return
@@ -33,31 +65,84 @@ export default function ShiftViewPage() {
     try {
       setLoading(true)
 
-      // 従業員データを取得
-      const employeesQuery = query(
-        collection(db, 'employees'),
-        where('organizationId', '==', user.uid),
-        where('isActive', '==', true)
-      )
-      const employeesSnapshot = await getDocs(employeesQuery)
-      const employeeList: Employee[] = []
-      employeesSnapshot.forEach((doc) => {
-        employeeList.push({ id: doc.id, ...doc.data() } as Employee)
-      })
-      setEmployees(employeeList)
+      // 従業員データを取得（すべてのフィールドパターンに対応）
+      let employeeList: Employee[] = []
+      try {
+        // まず status フィールドで試行
+        let employeesQuery = query(
+          collection(db, 'employees'),
+          where('organizationId', '==', user.uid),
+          where('status', '==', 'active')
+        )
+        let employeesSnapshot = await getDocs(employeesQuery)
+        employeesSnapshot.forEach((doc) => {
+          employeeList.push({ id: doc.id, ...doc.data() } as Employee)
+        })
+        console.log(`📋 従業員データを取得 (status): ${employeeList.length}名`)
+        
+        // データが0件の場合は isActive で再試行
+        if (employeeList.length === 0) {
+          console.log('status フィールドで0件、isActive で再試行...')
+          employeesQuery = query(
+            collection(db, 'employees'),
+            where('organizationId', '==', user.uid),
+            where('isActive', '==', true)
+          )
+          employeesSnapshot = await getDocs(employeesQuery)
+          employeeList = []
+          employeesSnapshot.forEach((doc) => {
+            employeeList.push({ id: doc.id, ...doc.data() } as Employee)
+          })
+          console.log(`📋 従業員データを取得 (isActive): ${employeeList.length}名`)
+        }
+        
+        // それでも0件の場合は全従業員を取得
+        if (employeeList.length === 0) {
+          console.log('条件付きで0件、全従業員を取得...')
+          employeesQuery = query(
+            collection(db, 'employees'),
+            where('organizationId', '==', user.uid)
+          )
+          employeesSnapshot = await getDocs(employeesQuery)
+          employeeList = []
+          employeesSnapshot.forEach((doc) => {
+            employeeList.push({ id: doc.id, ...doc.data() } as Employee)
+          })
+          console.log(`📋 全従業員データを取得: ${employeeList.length}名`)
+        }
+        
+        console.log('従業員データの詳細:', employeeList)
+        setEmployees(employeeList)
+      } catch (error) {
+        console.error('従業員データの取得に失敗しました:', error)
+      }
 
       // スケジュール一覧を取得
-      const schedulesQuery = query(
-        collection(db, 'schedules'),
-        where('organizationId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      )
-      const schedulesSnapshot = await getDocs(schedulesQuery)
-      const scheduleList: Schedule[] = []
-      schedulesSnapshot.forEach((doc) => {
-        scheduleList.push({ id: doc.id, ...doc.data() } as Schedule)
-      })
-      setSchedules(scheduleList)
+      let scheduleList: Schedule[] = []
+      try {
+        const schedulesQuery = query(
+          collection(db, 'schedules'),
+          where('organizationId', '==', user.uid)
+          // orderBy を一時的に削除してインデックスエラーを回避
+        )
+        const schedulesSnapshot = await getDocs(schedulesQuery)
+        schedulesSnapshot.forEach((doc) => {
+          scheduleList.push({ id: doc.id, ...doc.data() } as Schedule)
+        })
+        
+        // クライアントサイドでソート
+        scheduleList.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.startDate)
+          const dateB = new Date(b.createdAt || b.startDate)
+          return dateB.getTime() - dateA.getTime()
+        })
+        
+        console.log(`📅 スケジュールデータを取得: ${scheduleList.length}件`, scheduleList)
+        setSchedules(scheduleList)
+      } catch (error) {
+        console.error('スケジュールデータの取得に失敗しました:', error)
+        setSchedules([])
+      }
 
       // 最新のスケジュールを選択
       if (scheduleList.length > 0) {
@@ -80,6 +165,7 @@ export default function ShiftViewPage() {
 
   const fetchShiftsForSchedule = async (scheduleId: string) => {
     try {
+      console.log(`🔍 スケジュール ${scheduleId} のシフトを取得中...`)
       const shiftsQuery = query(
         collection(db, 'shifts'),
         where('scheduleId', '==', scheduleId)
@@ -95,6 +181,7 @@ export default function ShiftViewPage() {
           updatedAt: data.updatedAt?.toDate?.() || new Date()
         } as Shift)
       })
+      console.log(`📊 シフトデータを取得: ${shiftList.length}件`, shiftList)
       setShifts(shiftList)
     } catch (error) {
       console.error('シフトデータの取得に失敗しました:', error)
@@ -106,24 +193,32 @@ export default function ShiftViewPage() {
 
     try {
       setLoading(true)
+      console.log(`🔍 期間検索: ${dateRange.startDate} ～ ${dateRange.endDate}`)
+      
+      // インデックスエラーを回避するため、まず organizationId のみでクエリ
       const shiftsQuery = query(
         collection(db, 'shifts'),
-        where('organizationId', '==', user.uid),
-        where('date', '>=', dateRange.startDate),
-        where('date', '<=', dateRange.endDate)
+        where('organizationId', '==', user.uid)
       )
       const shiftsSnapshot = await getDocs(shiftsQuery)
-      const shiftList: Shift[] = []
+      const allShifts: Shift[] = []
       shiftsSnapshot.forEach((doc) => {
         const data = doc.data()
-        shiftList.push({
+        allShifts.push({
           id: doc.id,
           ...data,
           createdAt: data.createdAt?.toDate?.() || new Date(),
           updatedAt: data.updatedAt?.toDate?.() || new Date()
         } as Shift)
       })
-      setShifts(shiftList)
+      
+      // クライアントサイドで日付フィルタリング
+      const filteredShifts = allShifts.filter(shift => 
+        shift.date >= dateRange.startDate && shift.date <= dateRange.endDate
+      )
+      
+      console.log(`📊 期間検索結果: ${filteredShifts.length}件 (全体: ${allShifts.length}件)`, filteredShifts)
+      setShifts(filteredShifts)
       setSelectedSchedule(null)
     } catch (error) {
       console.error('シフトデータの取得に失敗しました:', error)
@@ -133,8 +228,17 @@ export default function ShiftViewPage() {
   }
 
   const handleScheduleChange = async (scheduleId: string) => {
+    if (!scheduleId) {
+      // カスタム期間を選択
+      setSelectedSchedule(null)
+      setShifts([])
+      console.log('📋 カスタム期間モードに切り替えました')
+      return
+    }
+    
     const schedule = schedules.find(s => s.id === scheduleId)
     if (schedule) {
+      console.log('📅 スケジュールを選択:', schedule)
       setSelectedSchedule(schedule)
       setDateRange({
         startDate: schedule.startDate,
@@ -142,6 +246,40 @@ export default function ShiftViewPage() {
       })
       await fetchShiftsForSchedule(scheduleId)
     }
+  }
+
+  const handleShiftBulkUpdate = (updatedShifts: Shift[]) => {
+    setShifts(prevShifts => {
+      const updatedShiftMap = new Map(updatedShifts.map(shift => [shift.id, shift]))
+      return prevShifts.map(shift => 
+        updatedShiftMap.has(shift.id) ? updatedShiftMap.get(shift.id)! : shift
+      )
+    })
+  }
+
+  const handleShiftBulkDelete = (shiftIds: string[]) => {
+    const shiftIdSet = new Set(shiftIds)
+    setShifts(prevShifts => 
+      prevShifts.filter(shift => !shiftIdSet.has(shift.id!))
+    )
+  }
+
+  const handleShiftCreate = (newShift: Shift) => {
+    setShifts(prevShifts => [...prevShifts, newShift])
+  }
+
+  const handleShiftUpdate = (updatedShift: Shift) => {
+    setShifts(prevShifts => 
+      prevShifts.map(shift => 
+        shift.id === updatedShift.id ? updatedShift : shift
+      )
+    )
+  }
+
+  const handleShiftDelete = (shiftId: string) => {
+    setShifts(prevShifts => 
+      prevShifts.filter(shift => shift.id !== shiftId)
+    )
   }
 
   if (loading) {
@@ -159,7 +297,28 @@ export default function ShiftViewPage() {
 
   return (
     <Layout>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">シフト表・エクスポート</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">シフト表・エクスポート</h1>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => setShowCreateModal(true)}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            ➕ 新規シフト
+          </Button>
+          {shifts.length > 0 && (
+            <Button 
+              onClick={() => setShowBulkEditModal(true)}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              📝 一括編集
+            </Button>
+          )}
+          <Button onClick={() => { setLoading(true); fetchData(); }} className="bg-blue-600 hover:bg-blue-700">
+            🔄 データを再読み込み
+          </Button>
+        </div>
+      </div>
 
       {/* フィルター */}
       <Card className="mb-6">
@@ -285,6 +444,9 @@ export default function ShiftViewPage() {
               employees={employees}
               startDate={dateRange.startDate}
               endDate={dateRange.endDate}
+              operatingHours={operatingHours}
+              onShiftUpdate={handleShiftUpdate}
+              onShiftDelete={handleShiftDelete}
             />
           ) : (
             <Card>
@@ -293,6 +455,9 @@ export default function ShiftViewPage() {
                   {employees.length === 0 ? (
                     <>
                       <p className="mb-4">従業員が登録されていません。</p>
+                      <p className="text-sm text-gray-400 mb-4">
+                        デバッグ情報: 組織ID = {user?.uid}
+                      </p>
                       <Button onClick={() => window.location.href = '/employees'}>
                         従業員管理へ
                       </Button>
@@ -300,6 +465,15 @@ export default function ShiftViewPage() {
                   ) : shifts.length === 0 ? (
                     <>
                       <p className="mb-4">指定された期間にシフトデータがありません。</p>
+                      <p className="text-sm text-gray-400 mb-4">
+                        従業員数: {employees.length}名、スケジュール数: {schedules.length}件
+                        {selectedSchedule && (
+                          <>
+                            <br />選択されたスケジュール: {selectedSchedule.id}
+                            <br />期間: {dateRange.startDate} ～ {dateRange.endDate}
+                          </>
+                        )}
+                      </p>
                       <Button onClick={() => window.location.href = '/shift/create'}>
                         シフトを作成
                       </Button>
@@ -311,6 +485,25 @@ export default function ShiftViewPage() {
               </CardContent>
             </Card>
           )}
+          
+          {/* シフト作成モーダル */}
+          <ShiftCreateModal
+            employees={employees}
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onSave={handleShiftCreate}
+            defaultDate={dateRange.startDate}
+          />
+
+          {/* シフト一括編集モーダル */}
+          <ShiftBulkEditModal
+            shifts={shifts}
+            employees={employees}
+            isOpen={showBulkEditModal}
+            onClose={() => setShowBulkEditModal(false)}
+            onSave={handleShiftBulkUpdate}
+            onDelete={handleShiftBulkDelete}
+          />
     </Layout>
   )
 }
