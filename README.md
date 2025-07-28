@@ -432,6 +432,8 @@ npm test
 - 🐛 `employeeName`プロパティの欠落を修正
 - 🐛 `Employee`型の`email`プロパティを必須に統一
 - 🐛 `Employee`型の`joinDate`プロパティを必須に統一
+- 🐛 `Employee`型の`status`に`'suspended'`ステータスを追加
+- 🐛 `Employee`型のすべてのプロパティを両ファイル間で完全統一
 - 🐛 `ShiftOptimizer`の型整合性改善
 - ✨ より堅牢な型安全性を確保
 

@@ -1,23 +1,22 @@
 // 従業員に関する型定義
 export interface Employee {
   id: string;
+  userId?: string;
+  organizationId: string;
+  employeeId?: string;
   name: string;
   email: string;
-  department: string;
+  phone?: string;
   position: string;
+  department: string;
   hourlyRate: number;
   joinDate: string;
-  status: 'active' | 'inactive';
   maxHoursPerWeek?: number;
   maxDaysPerWeek?: number;
-  phone?: string;
-  address?: string;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  status: 'active' | 'inactive' | 'suspended';
   skills?: string[];
+  availability?: Availability[];
+  constraints?: Constraint[];
   availableShifts?: {
     monday: boolean;
     tuesday: boolean;
@@ -27,9 +26,28 @@ export interface Employee {
     saturday: boolean;
     sunday: boolean;
   };
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  address?: string;
   createdAt: string;
   updatedAt: string;
-  organizationId: string;
+}
+
+// 従業員の可用性
+export interface Availability {
+  dayOfWeek: number; // 0-6 (Sunday-Saturday)
+  startTime: string;
+  endTime: string;
+  isPreferred: boolean;
+}
+
+// 従業員の制約条件
+export interface Constraint {
+  type: 'max_hours_per_day' | 'max_days_per_week' | 'min_rest_between_shifts';
+  value: number;
 }
 
 export interface CreateEmployeeData {
@@ -43,12 +61,9 @@ export interface CreateEmployeeData {
   maxDaysPerWeek?: number;
   phone?: string;
   address?: string;
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
   skills?: string[];
+  availability?: Availability[];
+  constraints?: Constraint[];
   availableShifts?: {
     monday: boolean;
     tuesday: boolean;
@@ -57,6 +72,11 @@ export interface CreateEmployeeData {
     friday: boolean;
     saturday: boolean;
     sunday: boolean;
+  };
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
   };
 }
 
