@@ -44,15 +44,31 @@ export interface Employee {
   name: string
   email?: string
   phone?: string
-  position?: string
-  department?: string
+  position: string
+  department: string
   hourlyRate: number
+  joinDate?: string
   maxHoursPerWeek?: number
   maxDaysPerWeek?: number
   status: 'active' | 'inactive' | 'suspended'
   skills?: string[]
   availability?: Availability[]
   constraints?: Constraint[]
+  availableShifts?: {
+    monday: boolean
+    tuesday: boolean
+    wednesday: boolean
+    thursday: boolean
+    friday: boolean
+    saturday: boolean
+    sunday: boolean
+  }
+  emergencyContact?: {
+    name: string
+    phone: string
+    relationship: string
+  }
+  address?: string
   createdAt: string
   updatedAt: string
 }
@@ -85,15 +101,22 @@ export interface ShiftRequest {
 }
 
 export interface Shift {
-  id: string
+  id?: string
   employeeId: string
-  date: string
-  startTime: string
-  endTime: string
-  position: string
+  employeeName: string
+  date: string // YYYY-MM-DD format
+  startTime: string // HH:mm format
+  endTime: string   // HH:mm format
+  breakTime?: number // minutes
+  position?: string
+  department?: string
+  hourlyRate?: number
   isConfirmed: boolean
-  createdAt: Date
-  updatedAt: Date
+  notes?: string
+  scheduleId?: string
+  organizationId?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export interface Schedule {

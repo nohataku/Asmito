@@ -270,14 +270,18 @@ export class ShiftOptimizer {
     
     // シフトを生成
     for (const candidate of selectedCandidates) {
-      console.log(`✅ シフト生成: ${this.employees.find(e => e.id === candidate.employeeId)?.name} ${candidate.startTime}-${candidate.endTime}`)
+      const employee = this.employees.find(e => e.id === candidate.employeeId)
+      console.log(`✅ シフト生成: ${employee?.name} ${candidate.startTime}-${candidate.endTime}`)
       this.generatedShifts.push({
         id: `shift_${Date.now()}_${Math.random()}`,
         employeeId: candidate.employeeId,
+        employeeName: employee?.name || '不明',
         date: candidate.date,
         startTime: candidate.startTime,
         endTime: candidate.endTime,
-        position: 'staff',
+        position: employee?.position || 'staff',
+        department: employee?.department || '',
+        hourlyRate: employee?.hourlyRate || 0,
         isConfirmed: false,
         createdAt: new Date(),
         updatedAt: new Date()
