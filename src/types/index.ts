@@ -42,12 +42,12 @@ export interface Employee {
   organizationId: string
   employeeId?: string
   name: string
-  email?: string
+  email: string
   phone?: string
   position: string
   department: string
   hourlyRate: number
-  joinDate?: string
+  joinDate: string
   maxHoursPerWeek?: number
   maxDaysPerWeek?: number
   status: 'active' | 'inactive' | 'suspended'

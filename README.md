@@ -363,6 +363,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 - ✅ 型の不整合 → 統一された型定義で解決
 - ✅ レスポンシブ表示問題 → Tailwind CSSで改善
 - ✅ デプロイ時のTypeScriptエラー → `employeeName`プロパティ追加で解決
+- ✅ Employee型のemail/joinDate不整合 → 必須プロパティに統一で解決
 
 ### 対応予定
 - 🔄 大量データでのパフォーマンス → 仮想化スクロール実装予定
@@ -429,6 +430,8 @@ npm test
 ### v0.3.1 (2025年7月28日) - デプロイエラー修正
 - 🐛 TypeScript型定義の統一化
 - 🐛 `employeeName`プロパティの欠落を修正
+- 🐛 `Employee`型の`email`プロパティを必須に統一
+- 🐛 `Employee`型の`joinDate`プロパティを必須に統一
 - 🐛 `ShiftOptimizer`の型整合性改善
 - ✨ より堅牢な型安全性を確保
 
