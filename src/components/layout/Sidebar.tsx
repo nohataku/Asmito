@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 
 // SVGアイコンコンポーネント
@@ -61,6 +61,12 @@ const XMarkIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 )
 
+const ArrowRightOnRectangleIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+  </svg>
+)
+
 const navigation = [
   { name: 'ダッシュボード', href: '/', icon: HomeIcon },
   { name: '従業員管理', href: '/employees', icon: UsersIcon },
@@ -86,11 +92,22 @@ interface SidebarProps {
 
 export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname()
-  const { user } = useAuthStore()
+  const router = useRouter()
+  const { user, logout } = useAuthStore()
   const [isOpen, setIsOpen] = useState(false)
   const [expandedItems, setExpandedItems] = useState<string[]>(['シフト管理'])
 
   if (!user) return null
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      setIsOpen(false)
+      router.push('/auth/login')
+    } catch (error) {
+      console.error('ログアウトに失敗しました:', error)
+    }
+  }
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => 
@@ -196,6 +213,38 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                 ))}
               </nav>
             </div>
+            
+            {/* Mobile user info and logout */}
+            <div className="flex-shrink-0 border-t border-gray-200">
+              <div className="flex items-center p-4">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <span className="text-sm font-medium text-indigo-600">
+                      {user?.email?.[0]?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {user?.email}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user.displayName}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Mobile logout button */}
+              <div className="px-3 pb-4">
+                <button
+                  onClick={handleLogout}
+                  className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <ArrowRightOnRectangleIcon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                  ログアウト
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -219,8 +268,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           </nav>
           
           {/* User info */}
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex items-center">
+          <div className="flex-shrink-0 border-t border-gray-200">
+            <div className="flex items-center p-4">
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
                   <span className="text-sm font-medium text-indigo-600">
@@ -228,7 +277,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                   </span>
                 </div>
               </div>
-              <div className="ml-3">
+              <div className="ml-3 flex-1">
                 <p className="text-sm font-medium text-gray-700 truncate">
                   {user?.email}
                 </p>
@@ -236,6 +285,17 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                   {user.displayName}
                 </p>
               </div>
+            </div>
+            
+            {/* Logout button */}
+            <div className="px-3 pb-4">
+              <button
+                onClick={handleLogout}
+                className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              >
+                <ArrowRightOnRectangleIcon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                ログアウト
+              </button>
             </div>
           </div>
         </div>

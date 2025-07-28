@@ -82,7 +82,7 @@ const AuthForm = ({ mode }: AuthFormProps) => {
       const user = userCredential.user;
       setUser(user); // Firebaseの完全なUserオブジェクトを使用
 
-      router.push('/dashboard');
+      router.push('/');
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('このメールアドレスは既に使用されています。');

@@ -18,7 +18,7 @@ export default function GoogleSignInButton({
   text = 'Googleでログイン',
   variant = 'default',
   className = '',
-  redirectTo = '/dashboard'
+  redirectTo = '/'
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

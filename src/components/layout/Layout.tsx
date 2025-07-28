@@ -14,7 +14,7 @@ export default function Layout({ children, showSidebar = true }: LayoutProps) {
       {showSidebar && <Sidebar />}
       
       <main className={`transition-all duration-300 ease-in-out ${showSidebar ? 'lg:ml-64' : ''}`}>
-        <div className="p-6 max-w-5xl mx-auto">
+        <div className={`${showSidebar ? 'p-6 max-w-5xl mx-auto' : ''}`}>
           {children}
         </div>
       </main>

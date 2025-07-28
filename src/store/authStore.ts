@@ -1,12 +1,13 @@
 import { create } from 'zustand'
-import { User } from 'firebase/auth'
+import { User, signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 
 interface AuthState {
   user: User | null
   loading: boolean
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -14,5 +15,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ loading }),
-  logout: () => set({ user: null }),
+  logout: async () => {
+    try {
+      await signOut(auth)
+      set({ user: null })
+      // ログアウト後はログインページにリダイレクトする場合は、コンポーネント側で処理
+    } catch (error) {
+      console.error('ログアウトエラー:', error)
+      throw error
+    }
+  },
 }))
