@@ -80,7 +80,6 @@ const navigation = [
       { name: 'シフト表・エクスポート', href: '/shift/view' },
     ]
   },
-  { name: '勤怠管理', href: '/my-shifts', icon: ClockIcon },
   { name: '給与計算', href: '/payroll', icon: CurrencyYenIcon },
   { name: 'レポート', href: '/reports', icon: ChartBarIcon },
   { name: '設定', href: '/settings', icon: Cog6ToothIcon },
