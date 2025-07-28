@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, addDoc, query, where } from 'firebase/firestore'
+import { collection, getDocs, addDoc, query, where, doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/Button'
@@ -28,15 +28,15 @@ interface ScheduleSettings {
   }
 }
 
-export default function CreateShiftPage() {
-  const { user } = useAuthStore()
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [shiftRequests, setShiftRequests] = useState<ShiftRequest[]>([])
-  const [generatedShifts, setGeneratedShifts] = useState<Shift[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [settings, setSettings] = useState<ScheduleSettings>({
-    startDate: '',
-    endDate: '',
+// デフォルト設定（設定が読み込めない場合のフォールバック）
+const getDefaultSettings = (): ScheduleSettings => {
+  const today = new Date()
+  const nextWeek = new Date(today)
+  nextWeek.setDate(today.getDate() + 7)
+  
+  return {
+    startDate: today.toISOString().split('T')[0],
+    endDate: nextWeek.toISOString().split('T')[0],
     minStaffPerHour: 2,
     maxStaffPerHour: 5,
     operatingHours: {
@@ -48,11 +48,67 @@ export default function CreateShiftPage() {
       maxDaysPerWeek: 5,
       minRestHours: 11
     }
-  })
+  }
+}
+
+export default function CreateShiftPage() {
+  const { user } = useAuthStore()
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [shiftRequests, setShiftRequests] = useState<ShiftRequest[]>([])
+  const [generatedShifts, setGeneratedShifts] = useState<Shift[]>([])
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [settings, setSettings] = useState<ScheduleSettings>(getDefaultSettings())
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
 
   useEffect(() => {
+    loadSettings()
     fetchData()
   }, [user])
+
+  const loadSettings = async () => {
+    if (!user) return
+
+    try {
+      setIsLoadingSettings(true)
+      
+      // システム設定を取得
+      const settingsDoc = await getDoc(doc(db, 'settings', 'system'))
+      
+      if (settingsDoc.exists()) {
+        const systemSettings = settingsDoc.data()
+        console.log('📋 システム設定を読み込みました:', systemSettings)
+        
+        // 設定データから初期値を設定
+        const today = new Date()
+        const nextWeek = new Date(today)
+        nextWeek.setDate(today.getDate() + 7)
+        
+        setSettings({
+          startDate: today.toISOString().split('T')[0],
+          endDate: nextWeek.toISOString().split('T')[0],
+          minStaffPerHour: systemSettings.workSettings?.minStaffPerHour || getDefaultSettings().minStaffPerHour,
+          maxStaffPerHour: systemSettings.workSettings?.maxStaffPerHour || getDefaultSettings().maxStaffPerHour,
+          operatingHours: {
+            start: systemSettings.workSettings?.operatingHours?.start || getDefaultSettings().operatingHours.start,
+            end: systemSettings.workSettings?.operatingHours?.end || getDefaultSettings().operatingHours.end
+          },
+          constraints: {
+            maxHoursPerDay: systemSettings.constraints?.maxHoursPerDay || getDefaultSettings().constraints.maxHoursPerDay,
+            maxDaysPerWeek: systemSettings.constraints?.maxDaysPerWeek || getDefaultSettings().constraints.maxDaysPerWeek,
+            minRestHours: systemSettings.constraints?.minRestHours || getDefaultSettings().constraints.minRestHours
+          }
+        })
+      } else {
+        console.log('📋 システム設定が見つかりません。デフォルト値を使用します。')
+        setSettings(getDefaultSettings())
+      }
+    } catch (error) {
+      console.error('設定の読み込みに失敗しました:', error)
+      setSettings(getDefaultSettings())
+    } finally {
+      setIsLoadingSettings(false)
+    }
+  }
 
   const fetchData = async () => {
     if (!user) return
@@ -102,6 +158,7 @@ export default function CreateShiftPage() {
     setIsGenerating(true)
     try {
       console.log('🤖 AIシフト最適化を開始します...')
+      console.log('📊 現在の設定:', settings)
       
       // 新しいAIオプティマイザーを使用
       const optimizer = new ShiftOptimizer(employees, shiftRequests, settings)
@@ -113,10 +170,14 @@ export default function CreateShiftPage() {
       // 最適化結果のサマリーを表示
       const summary = generateOptimizationSummary(optimizedShifts)
       console.log('📊 最適化サマリー:', summary)
+
+      if (optimizedShifts.length === 0) {
+        alert('⚠️ 現在の設定条件では、シフトを生成できませんでした。\n制約条件を緩和するか、従業員の希望を確認してください。')
+      }
       
     } catch (error) {
       console.error('シフト生成に失敗しました:', error)
-      alert('シフト生成に失敗しました。')
+      alert('シフト生成に失敗しました。設定を確認してもう一度お試しください。')
     } finally {
       setIsGenerating(false)
     }
@@ -188,15 +249,47 @@ export default function CreateShiftPage() {
     }))
   }
 
+  const resetToSystemSettings = async () => {
+    if (confirm('システム設定の値にリセットしますか？')) {
+      await loadSettings()
+    }
+  }
+
   return (
     <Layout>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">AIシフト作成</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">AIシフト作成</h1>
+        {!isLoadingSettings && (
+          <Button 
+            onClick={resetToSystemSettings}
+            className="text-blue-600 border border-blue-600 hover:bg-blue-50 bg-white"
+          >
+            🔄 システム設定に戻す
+          </Button>
+        )}
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {isLoadingSettings ? (
+        <div className="text-center py-8">
+          <div className="inline-flex items-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+            <span className="text-gray-600">設定を読み込み中...</span>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* 設定パネル */}
             <Card>
               <CardHeader>
-                <CardTitle>スケジュール設定</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>スケジュール設定</span>
+                  {!isLoadingSettings && (
+                    <span className="text-sm text-green-600 font-normal">
+                      ✅ システム設定から読み込み済み
+                    </span>
+                  )}
+                </CardTitle>
                 <CardDescription>シフト作成の基本設定を行ってください</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -279,6 +372,13 @@ export default function CreateShiftPage() {
 
                 <div className="border-t pt-4">
                   <h4 className="font-medium text-gray-900 mb-3">勤務制約</h4>
+                  <div className="mb-3 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      💡 これらの制約はシステム設定から自動読み込みされています。
+                      変更したい場合は「システム設定に戻す」ボタンで最新の設定を再読み込みするか、
+                      設定ページで基本値を変更してください。
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -477,6 +577,8 @@ export default function CreateShiftPage() {
               </CardContent>
             </Card>
           )}
+        </>
+      )}
     </Layout>
   )
 }
