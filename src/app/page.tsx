@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import Layout from '@/components/layout/Layout'
+import { EmployeeService } from '@/services/employeeService'
 
 export default function DashboardPage() {
   const { user, loading } = useAuthStore()
@@ -17,6 +18,7 @@ export default function DashboardPage() {
     pendingRequests: 0,
     monthlyPayroll: 0
   })
+  const [statsLoading, setStatsLoading] = useState(true)
 
   useEffect(() => {
     setMounted(true)
@@ -27,6 +29,35 @@ export default function DashboardPage() {
       router.push('/auth/login')
     }
   }, [user, loading, router, mounted])
+
+  // 統計データを取得
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!user) return
+
+      try {
+        setStatsLoading(true)
+        console.log('ダッシュボード: 統計データを取得中...', { userId: user.uid })
+        
+        // 従業員数を取得
+        const employees = await EmployeeService.getEmployees(user.uid)
+        console.log('ダッシュボード: 従業員データを取得しました:', employees.length, employees)
+        
+        setStats(prevStats => ({
+          ...prevStats,
+          totalEmployees: employees.length
+        }))
+      } catch (error) {
+        console.error('統計データの取得に失敗しました:', error)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    if (user && mounted) {
+      fetchStats()
+    }
+  }, [user, mounted])
 
   // サーバーサイドレンダリング時やマウント前は何も表示しない
   if (!mounted) {
@@ -60,7 +91,13 @@ export default function DashboardPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalEmployees}</div>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    stats.totalEmployees
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">登録済み従業員</p>
               </CardContent>
             </Card>
@@ -73,7 +110,13 @@ export default function DashboardPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.activeShifts}</div>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    stats.activeShifts
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">今月のシフト</p>
               </CardContent>
             </Card>
@@ -86,7 +129,13 @@ export default function DashboardPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingRequests}</div>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    stats.pendingRequests
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">承認待ち</p>
               </CardContent>
             </Card>
@@ -99,7 +148,13 @@ export default function DashboardPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">¥{stats.monthlyPayroll.toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    `¥${stats.monthlyPayroll.toLocaleString()}`
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">今月の予定給与</p>
               </CardContent>
             </Card>
