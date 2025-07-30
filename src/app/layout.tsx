@@ -11,15 +11,23 @@ export const metadata: Metadata = {
   keywords: ['シフト管理', '給与計算', 'AI', '労務管理', '人事管理'],
   authors: [{ name: 'Nohataku' }],
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   },
   openGraph: {
     title: 'Asmito - AI駆動シフト&給与管理システム',
     description: 'シフト作成や給与計算をAIの力で効率化する次世代管理ツール',
     type: 'website',
     locale: 'ja_JP',
+    images: [
+      {
+        url: '/logo.png',
+        width: 800,
+        height: 600,
+        alt: 'Asmito Logo',
+      },
+    ],
   },
 }
 

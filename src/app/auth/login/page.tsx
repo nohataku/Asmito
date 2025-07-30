@@ -4,6 +4,7 @@ import AuthForm from '@/components/auth/AuthForm'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 import Layout from '@/components/layout/Layout'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LoginPage() {
   return (
@@ -12,7 +13,15 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-indigo-600 mb-2">Asmito</h1>
+            <div className="flex justify-center mb-8">
+              <Image
+                src="/logo.png"
+                alt="Asmito Logo"
+                width={400}
+                height={160}
+                className="h-32 w-auto"
+              />
+            </div>
             <h2 className="text-2xl font-bold text-gray-900">
               アカウントにログイン
             </h2>

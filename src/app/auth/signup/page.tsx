@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import AuthForm from '@/components/auth/AuthForm';
@@ -15,6 +16,15 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader className="space-y-1">
+            <div className="flex justify-center mb-8">
+              <Image
+                src="/logo.png"
+                alt="Asmito Logo"
+                width={380}
+                height={140}
+                className="h-28 w-auto"
+              />
+            </div>
             <CardTitle className="text-2xl font-bold text-center">アカウント作成</CardTitle>
             <CardDescription className="text-center">
               新しいアカウントを作成してAsmitoを始めましょう

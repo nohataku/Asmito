@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
@@ -208,7 +209,15 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-secondary-900">
             <div className="flex-1 h-0 pt-16 pb-4 overflow-y-auto">
               <div className="px-3 pb-4 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Asmito</h1>
+                <div className="flex items-center space-x-2">
+                  <Image
+                    src="/logo.png"
+                    alt="Asmito Logo"
+                    width={120}
+                    height={40}
+                    className="h-8 w-auto"
+                  />
+                </div>
                 <ThemeToggle />
               </div>
               <nav className="px-3 space-y-1">
@@ -257,7 +266,15 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       <div className={`hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col ${className}`}>
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-secondary-900 border-r border-gray-200 dark:border-secondary-700 px-3">
           <div className="flex h-16 shrink-0 items-center justify-between px-1">
-            <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Asmito</h1>
+            <div className="flex items-center space-x-2">
+              <Image
+                src="/logo.png"
+                alt="Asmito Logo"
+                width={140}
+                height={50}
+                className="h-10 w-auto"
+              />
+            </div>
             <ThemeToggle />
           </div>
           <nav className="flex flex-1 flex-col">
