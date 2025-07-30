@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseShiftRequestWithAI, parseBulkShiftRequests } from '@/services/shiftAIService';
 import { parseShiftRequestFree } from '@/services/shiftAIFreeService';
 
 export async function POST(request: NextRequest) {
@@ -13,38 +12,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const aiEngine = process.env.AI_ENGINE || 'free';
     let result;
     
     if (mode === 'bulk') {
-      // 複数行の一括処理
+      // 複数行の一括処理（Geminiで順次処理）
       const lines = text.split('\n').filter(line => line.trim());
+      const results = [];
       
-      if (aiEngine === 'openai') {
-        result = await parseBulkShiftRequests(lines);
-      } else {
-        // 無料エンジンを使用
-        const results = [];
-        for (const line of lines) {
-          if (line.trim()) {
-            results.push(await parseShiftRequestFree(line.trim()));
-          }
+      for (const line of lines) {
+        if (line.trim()) {
+          results.push(await parseShiftRequestFree(line.trim()));
         }
-        result = results;
       }
+      result = results;
     } else {
       // 単一行の処理
-      if (aiEngine === 'openai') {
-        result = await parseShiftRequestWithAI(text);
-      } else {
-        result = await parseShiftRequestFree(text);
-      }
+      result = await parseShiftRequestFree(text);
     }
 
     return NextResponse.json({
       success: true,
       data: result,
-      engine: aiEngine
+      engine: 'gemini'
     });
 
   } catch (error) {
