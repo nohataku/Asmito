@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { useThemeStore } from '@/store/themeStore'
 import { useAuthStore } from '@/store/authStore'
 import { DataManagementService, type DataStats } from '@/services/dataManagementService'
+import { AIDataManager } from '@/lib/aiDataManager'
 
 interface SystemSettings {
   company: {
@@ -246,15 +247,20 @@ export default function SettingsPage() {
     
     const confirmation1 = confirm(
       '⚠️ 危険な操作です！\n\n' +
-      'すべてのデータ（従業員、シフト希望、確定シフト、設定）が削除されます。\n' +
-      'この操作は取り消せません。\n\n' +
+      'すべてのデータが削除されます:\n' +
+      '• 従業員データ\n' +
+      '• シフト希望・確定シフト\n' +
+      '• AIデータ（パフォーマンス・学習データ）\n' +
+      '• システム設定\n\n' +
+      'この操作は取り消せません。\n' +
       '本当に続行しますか？'
     )
     
     if (!confirmation1) return
     
     const confirmation2 = confirm(
-      '最終確認\n\n' +
+      '🚨 最終確認\n\n' +
+      'AIの学習データを含むすべてのデータが完全に削除されます。\n' +
       'データの復元はできません。\n' +
       '本当にすべてのデータを削除しますか？\n\n' +
       '※この操作はあなたのデータのみに影響し、他のユーザーには影響しません。'
@@ -264,14 +270,21 @@ export default function SettingsPage() {
     
     try {
       setDataOperationLoading(true)
+      
+      // 通常のデータを削除
       const deletedCounts = await DataManagementService.deleteAllData(user.uid)
+      
+      // AIデータも削除
+      const aiDataManager = new AIDataManager()
+      await aiDataManager.deleteAllData(user.uid)
       
       const message = [
         'すべてのデータを削除しました:',
         `• 従業員: ${deletedCounts.employees}件`,
         `• シフト希望: ${deletedCounts.shiftRequests}件`,
         `• 確定シフト: ${deletedCounts.shifts}件`,
-        `• 設定: ${deletedCounts.settings ? '削除済み' : 'なし'}`
+        `• 設定: ${deletedCounts.settings ? '削除済み' : 'なし'}`,
+        '• AIデータ: 削除済み（パフォーマンスデータ・学習データ）'
       ].join('\n')
       
       alert(message)
@@ -284,7 +297,7 @@ export default function SettingsPage() {
       
     } catch (error) {
       console.error('全データ削除に失敗しました:', error)
-      alert('全データ削除に失敗しました。')
+      alert('全データ削除に失敗しました。一部のデータが残っている可能性があります。')
     } finally {
       setDataOperationLoading(false)
     }
@@ -772,7 +785,8 @@ export default function SettingsPage() {
                 {dataOperationLoading ? '削除中...' : '🗑️ 全データ削除'}
               </Button>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                <strong>注意:</strong> この操作は取り消せません。あなたの組織のすべてのデータ（従業員、シフト、設定）が削除されます。
+                <strong>注意:</strong> この操作は取り消せません。あなたの組織のすべてのデータ
+                （従業員、シフト、設定、AIデータ）が削除されます。
                 他のユーザーのデータには影響しません。
               </p>
             </div>

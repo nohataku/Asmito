@@ -21,6 +21,7 @@ export interface Employee {
   id: string;
   name: string;
   email: string;
+  employeeId?: string; // 従業員ID（任意）
   department: string;
   position: string;
   hourlyRate: number; // 基本時給（後方互換性のため残す）
@@ -55,6 +56,7 @@ export interface Employee {
 export interface CreateEmployeeData {
   name: string;
   email: string;
+  employeeId?: string; // 従業員ID（任意）
   department: string;
   position: string;
   hourlyRate: number; // 基本時給（後方互換性のため残す）

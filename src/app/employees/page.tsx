@@ -24,6 +24,7 @@ export default function EmployeesPage() {
     name: '',
     email: '',
     phone: '',
+    employeeId: '',
     hourlyRate: '',
     position: '',
     maxHoursPerWeek: '',
@@ -59,6 +60,7 @@ export default function EmployeesPage() {
       name: '',
       email: '',
       phone: '',
+      employeeId: '',
       hourlyRate: '',
       position: '',
       maxHoursPerWeek: '',
@@ -129,6 +131,7 @@ export default function EmployeesPage() {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
+        employeeId: formData.employeeId,
         hourlyRate: parseInt(formData.hourlyRate),
         hourlyRates,
         position: formData.position,
@@ -164,6 +167,7 @@ export default function EmployeesPage() {
       name: employee.name,
       email: employee.email || '',
       phone: employee.phone || '',
+      employeeId: employee.employeeId || '',
       hourlyRate: employee.hourlyRate.toString(),
       position: employee.position || '',
       maxHoursPerWeek: employee.maxHoursPerWeek?.toString() || '',
@@ -354,6 +358,12 @@ export default function EmployeesPage() {
                         value={formData.name}
                         onChange={handleInputChange}
                         required
+                      />
+                      <Input
+                        name="employeeId"
+                        placeholder="従業員ID（任意）"
+                        value={formData.employeeId}
+                        onChange={handleInputChange}
                       />
                       <Input
                         name="email"
@@ -634,6 +644,11 @@ export default function EmployeesPage() {
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
                                   {employee.email}
                                 </div>
+                                {employee.employeeId && (
+                                  <div className="text-xs text-gray-400 dark:text-gray-500">
+                                    ID: {employee.employeeId}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
