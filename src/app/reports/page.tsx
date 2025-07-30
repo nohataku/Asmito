@@ -155,7 +155,7 @@ export default function ReportsPage() {
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">レポート</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">レポート</h1>
           <Button onClick={exportCSV} disabled={!reportData}>
             📊 CSVエクスポート
           </Button>
@@ -163,24 +163,24 @@ export default function ReportsPage() {
 
         {/* 期間選択 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">期間選択</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">期間選択</h2>
           <div className="flex gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">開始日</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">開始日</label>
               <input
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                className="border border-gray-300 rounded-md px-3 py-2"
+                className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">終了日</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">終了日</label>
               <input
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                className="border border-gray-300 rounded-md px-3 py-2"
+                className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -188,48 +188,48 @@ export default function ReportsPage() {
 
         {loading ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">レポートを生成中...</p>
+            <p className="text-gray-600 dark:text-gray-400">レポートを生成中...</p>
           </div>
         ) : reportData ? (
           <>
             {/* サマリー */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">総シフト数</h3>
-                <p className="text-3xl font-bold text-blue-600">{reportData.totalShifts}件</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">総シフト数</h3>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{reportData.totalShifts}件</p>
               </Card>
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">総労働時間</h3>
-                <p className="text-3xl font-bold text-green-600">{reportData.totalHours.toFixed(1)}時間</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">総労働時間</h3>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{reportData.totalHours.toFixed(1)}時間</p>
               </Card>
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">総人件費</h3>
-                <p className="text-3xl font-bold text-purple-600">¥{reportData.totalCost.toLocaleString()}</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">総人件費</h3>
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">¥{reportData.totalCost.toLocaleString()}</p>
               </Card>
             </div>
 
             {/* 従業員別統計 */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">従業員別統計</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">従業員別統計</h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full table-auto">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-2 text-left">従業員名</th>
-                      <th className="px-4 py-2 text-right">シフト数</th>
-                      <th className="px-4 py-2 text-right">労働時間</th>
-                      <th className="px-4 py-2 text-right">時給</th>
-                      <th className="px-4 py-2 text-right">人件費</th>
+                    <tr className="bg-gray-50 dark:bg-gray-800">
+                      <th className="px-4 py-2 text-left text-gray-900 dark:text-gray-100">従業員名</th>
+                      <th className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">シフト数</th>
+                      <th className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">労働時間</th>
+                      <th className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">時給</th>
+                      <th className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">人件費</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reportData.employeeStats.map((stat, index) => (
-                      <tr key={stat.employee.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-2 font-medium">{stat.employee.name}</td>
-                        <td className="px-4 py-2 text-right">{stat.shiftsCount}件</td>
-                        <td className="px-4 py-2 text-right">{stat.totalHours.toFixed(1)}時間</td>
-                        <td className="px-4 py-2 text-right">¥{stat.employee.hourlyRate.toLocaleString()}</td>
-                        <td className="px-4 py-2 text-right font-semibold">¥{stat.totalCost.toLocaleString()}</td>
+                      <tr key={stat.employee.id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'}>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{stat.employee.name}</td>
+                        <td className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">{stat.shiftsCount}件</td>
+                        <td className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">{stat.totalHours.toFixed(1)}時間</td>
+                        <td className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">¥{stat.employee.hourlyRate.toLocaleString()}</td>
+                        <td className="px-4 py-2 text-right font-semibold text-gray-900 dark:text-gray-100">¥{stat.totalCost.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -239,24 +239,24 @@ export default function ReportsPage() {
 
             {/* 日別統計 */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">日別統計</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">日別統計</h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full table-auto">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-2 text-left">日付</th>
-                      <th className="px-4 py-2 text-right">シフト数</th>
-                      <th className="px-4 py-2 text-right">労働時間</th>
-                      <th className="px-4 py-2 text-right">人件費</th>
+                    <tr className="bg-gray-50 dark:bg-gray-800">
+                      <th className="px-4 py-2 text-left text-gray-900 dark:text-gray-100">日付</th>
+                      <th className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">シフト数</th>
+                      <th className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">労働時間</th>
+                      <th className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">人件費</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reportData.dailyStats.map((stat, index) => (
-                      <tr key={stat.date} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-2 font-medium">{stat.date}</td>
-                        <td className="px-4 py-2 text-right">{stat.shiftsCount}件</td>
-                        <td className="px-4 py-2 text-right">{stat.totalHours.toFixed(1)}時間</td>
-                        <td className="px-4 py-2 text-right">¥{stat.totalCost.toLocaleString()}</td>
+                      <tr key={stat.date} className={index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'}>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{stat.date}</td>
+                        <td className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">{stat.shiftsCount}件</td>
+                        <td className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">{stat.totalHours.toFixed(1)}時間</td>
+                        <td className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">¥{stat.totalCost.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -266,7 +266,7 @@ export default function ReportsPage() {
           </>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-600">データがありません</p>
+            <p className="text-gray-600 dark:text-gray-400">データがありません</p>
           </div>
         )}
       </div>

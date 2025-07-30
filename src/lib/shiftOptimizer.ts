@@ -1,4 +1,5 @@
 import { Employee, ShiftRequest, Shift } from '@/types'
+import { ShiftValidator } from './shiftValidator'
 
 // 拡張された従業員型定義（オプティマイザー用）
 interface ExtendedEmployee extends Employee {
@@ -69,8 +70,8 @@ export class ShiftOptimizer {
    * メインの最適化関数
    */
   optimize(): Shift[] {
-    console.log('🤖 AI最適化開始...')
-    console.log(`📊 最適化設定:`)
+    console.log('最適化開始...')
+    console.log(`最適化設定:`)
     console.log(`  期間: ${this.settings.startDate} ～ ${this.settings.endDate}`)
     console.log(`  営業時間: ${this.settings.operatingHours.start} ～ ${this.settings.operatingHours.end}`)
     console.log(`  必要人数: ${this.settings.minStaffPerHour}名 ～ ${this.settings.maxStaffPerHour}名/時間`)
@@ -96,6 +97,9 @@ export class ShiftOptimizer {
     // 3. 最終スコア計算とレポート
     const score = this.calculateOverallScore()
     console.log(`✅ 最適化完了 - 総合スコア: ${score.toFixed(2)}`)
+
+    // 3.5. 生成されたシフトの検証
+    this.validateGeneratedShifts()
 
     // 4. 欠員レポート
     this.reportStaffingShortages()
@@ -191,101 +195,92 @@ export class ShiftOptimizer {
 
     console.log(`📝 ${date} ${startTime}: ${timeSlotRequests.length}件のシフト希望あり`)
 
-    const maxShiftHours = this.settings.constraints.maxHoursPerDay
-    const endTimeMinutes = normalizedStartTime + (maxShiftHours * 60)
-    
-    // 営業時間の終了を考慮
-    const operatingEnd = this.timeToMinutes(this.settings.operatingHours.end)
-    const operatingStart = this.timeToMinutes(this.settings.operatingHours.start)
-    
-    let actualOperatingEnd = operatingEnd
-    if (operatingEnd <= operatingStart) {
-      actualOperatingEnd = operatingEnd + 24 * 60
-    }
-    
-    const finalEndTime = Math.min(endTimeMinutes, actualOperatingEnd)
-    const endTime = this.minutesToTime(finalEndTime % (24 * 60))
-
     // その時間帯で既に働いている人数
     const currentStaff = this.generatedShifts.filter(shift => {
       const shiftStart = this.timeToMinutes(shift.startTime)
       const shiftEnd = this.timeToMinutes(shift.endTime)
-      const checkTime = normalizedStartTime
+      let checkTime = normalizedStartTime
+      
+      // 日をまたぐシフトの考慮
+      let adjustedShiftEnd = shiftEnd
+      if (shiftEnd <= shiftStart) {
+        adjustedShiftEnd = shiftEnd + 24 * 60
+      }
       
       return shift.date === date &&
         shiftStart <= checkTime &&
-        shiftEnd > checkTime
+        adjustedShiftEnd > checkTime
     }).length
 
-    // シフト希望がある場合、希望者の数を基準にする
-    const neededStaff = Math.min(
-      timeSlotRequests.length, // 希望者数まで
-      Math.max(0, this.settings.minStaffPerHour - currentStaff) // 最小必要人数
-    )
-    
-    console.log(`⏰ ${date} ${startTime}: 現在${currentStaff}名、希望者${timeSlotRequests.length}名、必要${neededStaff}名追加`)
-    
-    if (neededStaff === 0) return
-
-    // 候補者をスコアリング（希望者を優先）
-    const candidates: ShiftCandidate[] = []
-    
-    // まず希望者から候補を作成
+    // シフト希望者を個別に処理（希望時間を尊重）
     for (const request of timeSlotRequests) {
       const employee = availableEmployees.find(emp => emp.id === request.employeeId)
-      if (!employee) continue
+      if (!employee) {
+        console.log(`❌ 従業員が見つかりません: ${request.employeeId}`)
+        continue
+      }
 
       // 既にその日に働いているかチェック
       const alreadyWorking = this.generatedShifts.some(shift => 
         shift.date === date && shift.employeeId === employee.id
       )
       
-      if (alreadyWorking) continue
+      if (alreadyWorking) {
+        console.log(`⏭️ ${employee.name}: 既に${date}に勤務予定のためスキップ`)
+        continue
+      }
+
+      // シフト希望の実際の時間を使用
+      let actualStartTime = request.startTime || startTime
+      let actualEndTime = request.endTime || startTime
+      
+      // 終了時間が指定されていない場合、デフォルト勤務時間を設定
+      if (!request.endTime || request.startTime === request.endTime) {
+        const defaultHours = Math.min(this.settings.constraints.maxHoursPerDay, 8)
+        const startMinutes = this.timeToMinutes(actualStartTime)
+        const endMinutes = startMinutes + (defaultHours * 60)
+        
+        // 営業時間内に収める
+        const operatingEnd = this.timeToMinutes(this.settings.operatingHours.end)
+        let maxEndMinutes = operatingEnd
+        if (operatingEnd <= this.timeToMinutes(this.settings.operatingHours.start)) {
+          maxEndMinutes = operatingEnd + 24 * 60
+        }
+        
+        actualEndTime = this.minutesToTime(Math.min(endMinutes, maxEndMinutes) % (24 * 60))
+      }
+
+      // 勤務時間の妥当性チェック
+      const duration = this.calculateShiftDuration(actualStartTime, actualEndTime)
+      if (duration <= 0) {
+        console.log(`❌ ${employee.name}: 無効な勤務時間 ${actualStartTime}-${actualEndTime}`)
+        continue
+      }
 
       // 制約チェック
-      const conflicts = this.checkConstraints(employee.id, date, startTime, endTime)
+      const conflicts = this.checkConstraints(employee.id, date, actualStartTime, actualEndTime)
       
-      console.log(`👤 ${employee.name} (希望者): 制約チェック結果 - ${conflicts.length > 0 ? conflicts.join(', ') : '問題なし'}`)
+      console.log(`👤 ${employee.name}: ${actualStartTime}-${actualEndTime} (${duration}h) - ${conflicts.length > 0 ? conflicts.join(', ') : '✅ 問題なし'}`)
       
       if (conflicts.length === 0) {
-        const score = this.calculateCandidateScore(employee, date, startTime, workRequests)
-        console.log(`   スコア: ${score.toFixed(2)}`)
-        candidates.push({
+        console.log(`✅ シフト生成: ${employee.name} ${actualStartTime}-${actualEndTime} (${duration}時間)`)
+        this.generatedShifts.push({
+          id: `shift_${Date.now()}_${Math.random()}`,
           employeeId: employee.id,
-          date,
-          startTime,
-          endTime,
-          score,
-          conflicts: []
+          employeeName: employee.name,
+          date: date,
+          startTime: actualStartTime,
+          endTime: actualEndTime,
+          position: employee.position || 'staff',
+          department: employee.department || '',
+          hourlyRate: employee.hourlyRate || 0,
+          isConfirmed: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
         })
+      } else {
+        console.log(`❌ ${employee.name}: 制約違反により割り当て不可`)
       }
-    }
-
-    console.log(`📊 希望者候補${candidates.length}名から${Math.min(neededStaff, candidates.length)}名選択`)
-
-    // スコア順にソートして最適な候補を選択
-    candidates.sort((a, b) => b.score - a.score)
-    
-    const selectedCandidates = candidates.slice(0, Math.min(neededStaff, candidates.length))
-    
-    // シフトを生成
-    for (const candidate of selectedCandidates) {
-      const employee = this.employees.find(e => e.id === candidate.employeeId)
-      console.log(`✅ シフト生成: ${employee?.name} ${candidate.startTime}-${candidate.endTime}`)
-      this.generatedShifts.push({
-        id: `shift_${Date.now()}_${Math.random()}`,
-        employeeId: candidate.employeeId,
-        employeeName: employee?.name || '不明',
-        date: candidate.date,
-        startTime: candidate.startTime,
-        endTime: candidate.endTime,
-        position: employee?.position || 'staff',
-        department: employee?.department || '',
-        hourlyRate: employee?.hourlyRate || 0,
-        isConfirmed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
     }
   }
 
@@ -379,6 +374,15 @@ export class ShiftOptimizer {
     // 1日の最大勤務時間チェック
     const shiftDuration = this.calculateShiftDuration(startTime, endTime)
     console.log(`  勤務時間: ${shiftDuration}時間 (最大: ${this.settings.constraints.maxHoursPerDay}時間)`)
+    
+    // 勤務時間が0以下または異常な値の場合
+    if (shiftDuration <= 0) {
+      const conflict = '無効な勤務時間（開始時間 >= 終了時間）'
+      conflicts.push(conflict)
+      console.log(`  ❌ ${conflict}`)
+      return conflicts // 他のチェックは無意味なので早期返却
+    }
+    
     if (shiftDuration > this.settings.constraints.maxHoursPerDay) {
       const conflict = '1日の最大勤務時間を超過'
       conflicts.push(conflict)
@@ -544,6 +548,57 @@ export class ShiftOptimizer {
   }
 
   /**
+   * 生成されたシフトの検証
+   */
+  private validateGeneratedShifts() {
+    console.log('🔍 生成されたシフトの検証中...')
+    
+    const validation = ShiftValidator.validateShifts(this.generatedShifts)
+    
+    if (!validation.isValid) {
+      console.warn('⚠️ 生成されたシフトに問題があります:')
+      validation.errors.forEach(error => console.warn(`  - ${error}`))
+      
+      // 問題のあるシフトを除去
+      const validShifts: Shift[] = []
+      for (const shift of this.generatedShifts) {
+        const shiftValidation = ShiftValidator.validateShift(shift)
+        if (shiftValidation.isValid) {
+          validShifts.push(shift)
+        } else {
+          console.warn(`❌ 無効なシフトを除去: ${shift.employeeName || shift.employeeId} ${shift.date} ${shift.startTime}-${shift.endTime}`)
+        }
+      }
+      
+      this.generatedShifts = validShifts
+      console.log(`🔧 検証後のシフト数: ${this.generatedShifts.length}件`)
+    } else {
+      console.log('✅ 全てのシフトが正常です')
+    }
+
+    // シフト希望との整合性チェック
+    let inconsistentCount = 0
+    for (const shift of this.generatedShifts) {
+      const request = this.shiftRequests.find(req => 
+        req.employeeId === shift.employeeId && 
+        req.date === shift.date && 
+        req.type === 'work'
+      )
+      
+      if (request && !ShiftValidator.isShiftWithinRequest(shift, request)) {
+        console.warn(`⚠️ シフト希望と不整合: ${shift.employeeName} ${shift.date} ${shift.startTime}-${shift.endTime}`)
+        inconsistentCount++
+      }
+    }
+    
+    if (inconsistentCount > 0) {
+      console.warn(`⚠️ ${inconsistentCount}件のシフトがシフト希望と不整合です`)
+    } else {
+      console.log('✅ 全てのシフトがシフト希望と整合しています')
+    }
+  }
+
+  /**
    * 欠員情報を取得
    */
   getStaffingShortages(): StaffingShortage[] {
@@ -566,20 +621,15 @@ export class ShiftOptimizer {
   }
 
   private timeToMinutes(time: string): number {
-    const [hours, minutes] = time.split(':').map(Number)
-    return hours * 60 + minutes
+    return ShiftValidator.timeToMinutes(time)
   }
 
   private minutesToTime(minutes: number): string {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+    return ShiftValidator.minutesToTime(minutes)
   }
 
   private calculateShiftDuration(startTime: string, endTime: string): number {
-    const start = this.timeToMinutes(startTime)
-    const end = this.timeToMinutes(endTime)
-    return (end - start) / 60
+    return ShiftValidator.calculateShiftDuration(startTime, endTime)
   }
 
   private getWeeklyShifts(employeeId: string, date: string): Shift[] {

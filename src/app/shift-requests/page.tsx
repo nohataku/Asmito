@@ -7,7 +7,7 @@ import Layout from '@/components/layout/Layout';
 import Link from 'next/link';
 import { EmployeeService } from '@/services/employeeService';
 import { ShiftRequestService, ShiftRequest } from '@/services/shiftRequestService';
-import { Employee } from '@/types/employee';
+import { Employee } from '@/types/index';
 import { useAuthStore } from '@/store/authStore';
 
 export default function ShiftRequestsPage() {
@@ -44,8 +44,17 @@ export default function ShiftRequestsPage() {
 
         // 表示期間に応じた開始日と終了日を計算
         const dates = getDisplayDates();
-        const startDateStr = dates[0].toISOString().split('T')[0];
-        const endDateStr = dates[dates.length - 1].toISOString().split('T')[0];
+        let startDateStr = '';
+        let endDateStr = '';
+        
+        if (dates.length > 0) {
+          // タイムゾーン問題を回避するため、ローカル日付として処理
+          const startDate = dates[0];
+          const endDate = dates[dates.length - 1];
+          
+          startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+          endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+        }
 
         // シフト希望データを取得
         const shiftRequestData = await ShiftRequestService.getShiftRequests(
@@ -138,10 +147,10 @@ export default function ShiftRequestsPage() {
   // タイプの色を取得
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'on': return 'bg-blue-100 text-blue-800';
-      case 'off': return 'bg-gray-100 text-gray-800';
-      case 'prefer': return 'bg-indigo-100 text-indigo-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'on': return 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200';
+      case 'off': return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+      case 'prefer': return 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
     }
   };
 
@@ -296,8 +305,8 @@ export default function ShiftRequestsPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">シフト希望確認</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">シフト希望確認</h1>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
               従業員から提出されたシフト希望を柔軟な期間で確認できます
             </p>
           </div>
@@ -313,7 +322,7 @@ export default function ShiftRequestsPage() {
           <CardContent className="flex items-center justify-center py-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">データを読み込み中...</p>
+              <p className="text-gray-600 dark:text-gray-400">データを読み込み中...</p>
             </div>
           </CardContent>
         </Card>
@@ -348,7 +357,7 @@ export default function ShiftRequestsPage() {
               <div className="flex flex-col gap-4">
                 {/* 表示モード選択 */}
                 <div className="flex items-center gap-4">
-                  <label className="text-sm font-medium text-gray-700">表示モード:</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">表示モード:</label>
                   <div className="flex gap-2">
                     {(['day', 'week', 'half-month', 'month'] as const).map(mode => (
                       <Button
@@ -378,7 +387,7 @@ export default function ShiftRequestsPage() {
                     <p className="font-medium">
                       {getPeriodLabel()}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {getViewModeLabel()}
                     </p>
                   </div>
@@ -405,16 +414,16 @@ export default function ShiftRequestsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3 font-medium text-gray-900">従業員</th>
+                    <tr className="border-b dark:border-secondary-700">
+                      <th className="text-left p-3 font-medium text-gray-900 dark:text-gray-100">従業員</th>
                       {displayDates.map((date, index) => (
-                        <th key={index} className={`text-center p-3 font-medium text-gray-900 min-w-48 ${
-                          viewMode === 'half-month' && index === 7 ? 'border-l-2 border-indigo-200' : ''
+                        <th key={index} className={`text-center p-3 font-medium text-gray-900 dark:text-gray-100 min-w-48 ${
+                          viewMode === 'half-month' && index === 7 ? 'border-l-2 border-indigo-200 dark:border-indigo-600' : ''
                         }`}>
                           {date.getMonth() + 1}/{date.getDate()}<br />
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
                             ({dayNames[date.getDay()]})
-                            {viewMode === 'half-month' && index === 6 && <span className="ml-1 text-indigo-600">|</span>}
+                            {viewMode === 'half-month' && index === 6 && <span className="ml-1 text-indigo-600 dark:text-indigo-400">|</span>}
                           </span>
                         </th>
                       ))}
@@ -422,31 +431,35 @@ export default function ShiftRequestsPage() {
                   </thead>
                   <tbody>
                     {employees.map(employee => (
-                      <tr key={employee.id} className="border-b hover:bg-gray-50">
+                      <tr key={employee.id} className="border-b dark:border-secondary-700 hover:bg-gray-50 dark:hover:bg-secondary-800 transition-colors duration-200">
                         <td className="p-3">
                           <div>
-                            <div className="font-medium text-gray-900">{employee.name}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="font-medium text-gray-900 dark:text-gray-100">{employee.name}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
                               {employee.department} - {employee.position}
                             </div>
                           </div>
                         </td>
                         {displayDates.map((date, dateIndex) => {
-                          const dateStr = date.toISOString().split('T')[0];
+                          // タイムゾーン問題を回避するため、ローカル日付として処理
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const dateStr = `${year}-${month}-${day}`;
                           const dayRequests = getShiftRequestsForEmployeeAndDate(employee.id, dateStr);
                           
                           return (
                             <td key={dateIndex} className={`p-2 ${
-                              viewMode === 'half-month' && dateIndex === 7 ? 'border-l-2 border-indigo-200' : ''
+                              viewMode === 'half-month' && dateIndex === 7 ? 'border-l-2 border-indigo-200 dark:border-indigo-600' : ''
                             }`}>
                               <div className="space-y-2">
                                 {dayRequests.length === 0 ? (
-                                  <div className="text-center text-gray-400 text-sm py-2">
+                                  <div className="text-center text-gray-400 dark:text-gray-500 text-sm py-2">
                                     希望なし
                                   </div>
                                 ) : (
                                   dayRequests.map((request, reqIndex) => (
-                                    <div key={reqIndex} className="border rounded-lg p-3 bg-white">
+                                    <div key={reqIndex} className="border rounded-lg p-3 bg-white dark:bg-secondary-800 dark:border-secondary-600">
                                       <div className="flex items-center justify-between mb-2">
                                         <span className={`px-2 py-1 text-xs rounded ${getTypeColor(request.type)}`}>
                                           {getTypeLabel(request.type)}
@@ -471,7 +484,7 @@ export default function ShiftRequestsPage() {
                                               type="time"
                                               value={editForm.startTime}
                                               onChange={(e) => setEditForm(prev => ({...prev, startTime: e.target.value}))}
-                                              className="text-xs px-2 py-1 border rounded w-20"
+                                              className="text-xs px-2 py-1 border border-gray-300 dark:border-secondary-600 rounded w-20 bg-white dark:bg-secondary-700 text-gray-900 dark:text-gray-100"
                                               step="900"
                                               min="00:00"
                                               max="23:59"
@@ -481,20 +494,20 @@ export default function ShiftRequestsPage() {
                                               type="time"
                                               value={editForm.endTime}
                                               onChange={(e) => setEditForm(prev => ({...prev, endTime: e.target.value}))}
-                                              className="text-xs px-2 py-1 border rounded w-20"
+                                              className="text-xs px-2 py-1 border border-gray-300 dark:border-secondary-600 rounded w-20 bg-white dark:bg-secondary-700 text-gray-900 dark:text-gray-100"
                                               step="900"
                                               min="00:00"
                                               max="23:59"
                                             />
                                           </div>
-                                          <div className="text-xs text-gray-500">
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
                                             ※24時間営業対応 (00:00-23:59)
                                           </div>
                                           <textarea
                                             value={editForm.notes}
                                             onChange={(e) => setEditForm(prev => ({...prev, notes: e.target.value}))}
                                             placeholder="メモ・備考"
-                                            className="text-xs px-2 py-1 border rounded w-full h-16 resize-none"
+                                            className="text-xs px-2 py-1 border border-gray-300 dark:border-secondary-600 rounded w-full h-16 resize-none bg-white dark:bg-secondary-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                           />
                                           <div className="flex space-x-1">
                                             <Button
@@ -518,12 +531,12 @@ export default function ShiftRequestsPage() {
                                         // 表示モード
                                         <>
                                           {request.startTime && request.endTime && (
-                                            <div className="text-sm text-gray-600 mb-2">
+                                            <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                                               <span className="font-medium">
                                                 {formatTime(request.startTime)} - {formatTime(request.endTime)}
                                               </span>
                                               {isNightShift(request.startTime, request.endTime) && (
-                                                <span className="ml-2 px-1 py-0.5 text-xs bg-purple-100 text-purple-800 rounded">
+                                                <span className="ml-2 px-1 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded">
                                                   深夜勤務
                                                 </span>
                                               )}
@@ -531,7 +544,7 @@ export default function ShiftRequestsPage() {
                                           )}
                                           
                                           {request.notes && (
-                                            <div className="text-xs text-gray-500 mb-2">
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                                               {request.notes}
                                             </div>
                                           )}

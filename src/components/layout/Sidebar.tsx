@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 // SVGアイコンコンポーネント
 const HomeIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -130,8 +131,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
               group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors
               ${isChild ? 'ml-8 pl-4' : ''}
               ${isActive 
-                ? 'bg-indigo-100 text-indigo-700 border-r-2 border-indigo-500' 
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-500 dark:border-indigo-400' 
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-secondary-800 hover:text-gray-900 dark:hover:text-gray-100'
               }
             `}
             onClick={() => setIsOpen(false)}
@@ -139,7 +140,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
             {item.icon && (
               <item.icon
                 className={`mr-3 flex-shrink-0 h-5 w-5 ${
-                  isActive ? 'text-indigo-500' : 'text-gray-400 group-hover:text-gray-500'
+                  isActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400'
                 }`}
               />
             )}
@@ -151,11 +152,11 @@ export default function Sidebar({ className = '' }: SidebarProps) {
             className={`
               group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors text-left
               ${isChild ? 'ml-8 pl-4' : ''}
-              text-gray-600 hover:bg-gray-50 hover:text-gray-900
+              text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-secondary-800 hover:text-gray-900 dark:hover:text-gray-100
             `}
           >
             {item.icon && (
-              <item.icon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+              <item.icon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
             )}
             <span className="flex-1">{item.name}</span>
             <svg
@@ -186,7 +187,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           type="button"
-          className="bg-white p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+          className="bg-white dark:bg-secondary-800 p-2 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 dark:focus:ring-indigo-400"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? (
@@ -204,8 +205,12 @@ export default function Sidebar({ className = '' }: SidebarProps) {
             className="fixed inset-0 bg-gray-600 bg-opacity-75"
             onClick={() => setIsOpen(false)}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-secondary-900">
             <div className="flex-1 h-0 pt-16 pb-4 overflow-y-auto">
+              <div className="px-3 pb-4 flex justify-between items-center">
+                <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Asmito</h1>
+                <ThemeToggle />
+              </div>
               <nav className="px-3 space-y-1">
                 {navigation.map((item) => (
                   <NavItem key={item.name} item={item} />
@@ -214,20 +219,20 @@ export default function Sidebar({ className = '' }: SidebarProps) {
             </div>
             
             {/* Mobile user info and logout */}
-            <div className="flex-shrink-0 border-t border-gray-200">
-              <div className="flex items-center p-4">
+            <div className="flex-shrink-0 border-t border-gray-200 dark:border-secondary-700">
+                <div className="flex items-center p-4">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <span className="text-sm font-medium text-indigo-600">
+                  <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                    <span className="text-sm font-medium text-indigo-600 dark:text-indigo-300">
                       {user?.email?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
                 </div>
                 <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-gray-700 truncate">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
                     {user?.email}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {user.displayName}
                   </p>
                 </div>
@@ -237,9 +242,9 @@ export default function Sidebar({ className = '' }: SidebarProps) {
               <div className="px-3 pb-4">
                 <button
                   onClick={handleLogout}
-                  className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-secondary-800 hover:text-gray-900 dark:hover:text-gray-100"
                 >
-                  <ArrowRightOnRectangleIcon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                  <ArrowRightOnRectangleIcon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
                   ログアウト
                 </button>
               </div>
@@ -250,9 +255,10 @@ export default function Sidebar({ className = '' }: SidebarProps) {
 
       {/* Desktop sidebar */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col ${className}`}>
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200 px-3">
-          <div className="flex h-16 shrink-0 items-center px-1">
-            <h1 className="text-xl font-bold text-indigo-600">Asmito</h1>
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-secondary-900 border-r border-gray-200 dark:border-secondary-700 px-3">
+          <div className="flex h-16 shrink-0 items-center justify-between px-1">
+            <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Asmito</h1>
+            <ThemeToggle />
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -267,20 +273,20 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           </nav>
           
           {/* User info */}
-          <div className="flex-shrink-0 border-t border-gray-200">
+          <div className="flex-shrink-0 border-t border-gray-200 dark:border-secondary-700">
             <div className="flex items-center p-4">
               <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span className="text-sm font-medium text-indigo-600">
+                <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                  <span className="text-sm font-medium text-indigo-600 dark:text-indigo-300">
                     {user?.email?.[0]?.toUpperCase() || 'U'}
                   </span>
                 </div>
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-700 truncate">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
                   {user?.email}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {user.displayName}
                 </p>
               </div>
@@ -290,9 +296,9 @@ export default function Sidebar({ className = '' }: SidebarProps) {
             <div className="px-3 pb-4">
               <button
                 onClick={handleLogout}
-                className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                className="group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-secondary-800 hover:text-gray-900 dark:hover:text-gray-100"
               >
-                <ArrowRightOnRectangleIcon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                <ArrowRightOnRectangleIcon className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
                 ログアウト
               </button>
             </div>

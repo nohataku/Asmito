@@ -68,7 +68,7 @@ export default function DashboardPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
         </div>
       </Layout>
     )
@@ -86,76 +86,76 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">従業員数</CardTitle>
-                <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                 </svg>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                   ) : (
                     stats.totalEmployees
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">登録済み従業員</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">登録済み従業員</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">アクティブシフト</CardTitle>
-                <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                   ) : (
                     stats.activeShifts
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">今月のシフト</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">今月のシフト</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">保留中の申請</CardTitle>
-                <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                   ) : (
                     stats.pendingRequests
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">承認待ち</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">承認待ち</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">月間給与</CardTitle>
-                <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                   ) : (
                     `¥${stats.monthlyPayroll.toLocaleString()}`
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">今月の予定給与</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">今月の予定給与</p>
               </CardContent>
             </Card>
           </div>
@@ -248,7 +248,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     まだ活動がありません。最初のシフトを作成してみましょう！
                   </div>
                 </div>
@@ -263,7 +263,7 @@ export default function DashboardPage() {
               <CardDescription>7月26日 - 8月1日</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 シフトデータがありません。<br />
                 <Button 
                   className="mt-4"

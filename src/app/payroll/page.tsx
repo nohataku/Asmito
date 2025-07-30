@@ -273,7 +273,7 @@ export default function PayrollPage() {
 
   return (
     <Layout>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">給与計算</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">給与計算</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {/* 計算設定 */}
@@ -284,7 +284,7 @@ export default function PayrollPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     期間開始日
                   </label>
                   <Input
@@ -294,7 +294,7 @@ export default function PayrollPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     期間終了日
                   </label>
                   <Input
@@ -305,10 +305,10 @@ export default function PayrollPage() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-900 mb-3">割増設定</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">割増設定</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         残業割増率
                       </label>
                       <Input
@@ -321,7 +321,7 @@ export default function PayrollPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         深夜割増率
                       </label>
                       <Input
@@ -354,17 +354,17 @@ export default function PayrollPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span className="font-medium">対象従業員数</span>
-                    <span className="text-2xl font-bold text-blue-600">{payrollData.length}</span>
+                  <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">対象従業員数</span>
+                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{payrollData.length}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="font-medium">総支給額</span>
-                    <span className="text-2xl font-bold text-green-600">¥{totalAmount.toLocaleString()}</span>
+                  <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">総支給額</span>
+                    <span className="text-2xl font-bold text-green-600 dark:text-green-400">¥{totalAmount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                    <span className="font-medium">平均支給額</span>
-                    <span className="text-2xl font-bold text-purple-600">
+                  <div className="flex justify-between items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">平均支給額</span>
+                    <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                       ¥{payrollData.length > 0 ? Math.round(totalAmount / payrollData.length).toLocaleString() : '0'}
                     </span>
                   </div>
@@ -391,19 +391,19 @@ export default function PayrollPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">登録従業員</span>
-                    <span className="text-lg font-bold">{employees.length}名</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">登録従業員</span>
+                    <span className="text-lg font-bold text-gray-700 dark:text-gray-300">{employees.length}名</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">総シフト数</span>
-                    <span className="text-lg font-bold">{shifts.length}件</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">総シフト数</span>
+                    <span className="text-lg font-bold text-gray-700 dark:text-gray-300">{shifts.length}件</span>
                   </div>
                   
                   {selectedPeriod.startDate && selectedPeriod.endDate && (
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="font-medium">期間内シフト</span>
-                      <span className="text-lg font-bold">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">期間内シフト</span>
+                      <span className="text-lg font-bold text-gray-700 dark:text-gray-300">
                         {shifts.filter(s => s.date >= selectedPeriod.startDate && s.date <= selectedPeriod.endDate).length}件
                       </span>
                     </div>
@@ -424,48 +424,48 @@ export default function PayrollPage() {
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           従業員名
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           勤務日数
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           通常時間
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           残業時間
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           深夜時間
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           総支給額
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                       {payrollData.map((data, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                             {data.employeeName}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                             {data.workDays}日
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                             {data.regularHours}h
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                             {data.overtimeHours}h
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                             {data.nightShiftHours}h
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-gray-100">
                             ¥{data.totalPay.toLocaleString()}
                           </td>
                         </tr>
@@ -480,7 +480,7 @@ export default function PayrollPage() {
           {employees.length === 0 && (
             <Card>
               <CardContent className="text-center py-8">
-                <p className="text-gray-500 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
                   給与計算を行う前に、従業員とシフトを登録してください。
                 </p>
                 <div className="space-x-4">
