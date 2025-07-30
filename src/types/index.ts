@@ -1,3 +1,13 @@
+// 従業員関連の型をインポート・エクスポート
+export type { 
+  Employee as EmployeeType, 
+  CreateEmployeeData, 
+  EmployeeBasic,
+  ShiftType,
+  HourlyRates,
+  AvailableShiftTypes
+} from './employee'
+
 export interface User {
   id: string
   email: string

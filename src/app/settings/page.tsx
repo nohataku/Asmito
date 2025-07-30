@@ -8,6 +8,8 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useThemeStore } from '@/store/themeStore'
+import { useAuthStore } from '@/store/authStore'
+import { DataManagementService, type DataStats } from '@/services/dataManagementService'
 
 interface SystemSettings {
   company: {
@@ -98,19 +100,27 @@ const defaultSettings: SystemSettings = {
 }
 
 export default function SettingsPage() {
+  const { user } = useAuthStore()
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const { theme, setTheme } = useThemeStore()
   const [saved, setSaved] = useState(false)
+  const [dataStats, setDataStats] = useState<DataStats | null>(null)
+  const [dataOperationLoading, setDataOperationLoading] = useState(false)
 
   useEffect(() => {
-    loadSettings()
-  }, [])
+    if (user) {
+      loadSettings()
+      loadDataStats()
+    }
+  }, [user])
 
   const loadSettings = async () => {
+    if (!user) return
+    
     try {
-      const settingsDoc = await getDoc(doc(db, 'settings', 'system'))
+      const settingsDoc = await getDoc(doc(db, 'settings', user.uid))
       if (settingsDoc.exists()) {
         setSettings({ ...defaultSettings, ...settingsDoc.data() })
       }
@@ -121,14 +131,28 @@ export default function SettingsPage() {
     }
   }
 
+  const loadDataStats = async () => {
+    if (!user) return
+    
+    try {
+      const stats = await DataManagementService.getDataStats(user.uid)
+      setDataStats(stats)
+    } catch (error) {
+      console.error('データ統計の読み込みに失敗しました:', error)
+    }
+  }
+
   const saveSettings = async () => {
+    if (!user) return
+    
     try {
       setSaving(true)
-      await setDoc(doc(db, 'settings', 'system'), settings)
+      await setDoc(doc(db, 'settings', user.uid), settings)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (error) {
       console.error('設定の保存に失敗しました:', error)
+      alert('設定の保存に失敗しました。')
     } finally {
       setSaving(false)
     }
@@ -148,6 +172,132 @@ export default function SettingsPage() {
       current[keys[keys.length - 1]] = value
       return newSettings
     })
+  }
+
+  // データエクスポート処理
+  const handleExportData = async () => {
+    if (!user) return
+    
+    try {
+      setDataOperationLoading(true)
+      const exportData = await DataManagementService.exportData(user.uid)
+      DataManagementService.downloadAsJSON(exportData)
+      alert('データエクスポートが完了しました。')
+    } catch (error) {
+      console.error('データエクスポートに失敗しました:', error)
+      alert('データエクスポートに失敗しました。')
+    } finally {
+      setDataOperationLoading(false)
+    }
+  }
+
+  // 従業員CSVエクスポート処理
+  const handleExportEmployeesCSV = async () => {
+    if (!user) return
+    
+    try {
+      setDataOperationLoading(true)
+      const exportData = await DataManagementService.exportData(user.uid)
+      DataManagementService.downloadEmployeesAsCSV(exportData.employees)
+      alert('従業員CSVエクスポートが完了しました。')
+    } catch (error) {
+      console.error('従業員CSVエクスポートに失敗しました:', error)
+      alert('従業員CSVエクスポートに失敗しました。')
+    } finally {
+      setDataOperationLoading(false)
+    }
+  }
+
+  // データインポート処理
+  const handleImportData = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target?.result as string)
+            const validation = DataManagementService.validateImportData(data)
+            
+            if (!validation.isValid) {
+              alert(`データが無効です:\n${validation.errors.join('\n')}`)
+              return
+            }
+            
+            // インポート処理は複雑なため、現在は準備中として表示
+            alert('データインポート機能は準備中です。')
+          } catch (error) {
+            console.error('データインポートに失敗しました:', error)
+            alert('データインポートに失敗しました。ファイル形式を確認してください。')
+          }
+        }
+        reader.readAsText(file)
+      }
+    }
+    input.click()
+  }
+
+  // 全データ削除処理
+  const handleDeleteAllData = async () => {
+    if (!user) return
+    
+    const confirmation1 = confirm(
+      '⚠️ 危険な操作です！\n\n' +
+      'すべてのデータ（従業員、シフト希望、確定シフト、設定）が削除されます。\n' +
+      'この操作は取り消せません。\n\n' +
+      '本当に続行しますか？'
+    )
+    
+    if (!confirmation1) return
+    
+    const confirmation2 = confirm(
+      '最終確認\n\n' +
+      'データの復元はできません。\n' +
+      '本当にすべてのデータを削除しますか？\n\n' +
+      '※この操作はあなたのデータのみに影響し、他のユーザーには影響しません。'
+    )
+    
+    if (!confirmation2) return
+    
+    try {
+      setDataOperationLoading(true)
+      const deletedCounts = await DataManagementService.deleteAllData(user.uid)
+      
+      const message = [
+        'すべてのデータを削除しました:',
+        `• 従業員: ${deletedCounts.employees}件`,
+        `• シフト希望: ${deletedCounts.shiftRequests}件`,
+        `• 確定シフト: ${deletedCounts.shifts}件`,
+        `• 設定: ${deletedCounts.settings ? '削除済み' : 'なし'}`
+      ].join('\n')
+      
+      alert(message)
+      
+      // データ統計を再読み込み
+      await loadDataStats()
+      
+      // 設定をデフォルトに戻す
+      setSettings(defaultSettings)
+      
+    } catch (error) {
+      console.error('全データ削除に失敗しました:', error)
+      alert('全データ削除に失敗しました。')
+    } finally {
+      setDataOperationLoading(false)
+    }
+  }
+
+  if (!user) {
+    return (
+      <Layout>
+        <div className="text-center py-8">
+          <p className="text-gray-600 dark:text-gray-400">ログインが必要です。</p>
+        </div>
+      </Layout>
+    )
   }
 
   if (loading) {
@@ -531,21 +681,99 @@ export default function SettingsPage() {
         {/* データ管理 */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🗄️ データ管理</h2>
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <Button className="bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600">
-                📤 データエクスポート
-              </Button>
-              <Button className="bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600">
-                📥 データインポート
-              </Button>
+          
+          {/* データ統計 */}
+          {dataStats && (
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">📊 データ統計</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{dataStats.employees}</div>
+                  <div className="text-gray-600 dark:text-gray-400">従業員</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">{dataStats.shiftRequests}</div>
+                  <div className="text-gray-600 dark:text-gray-400">シフト希望</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{dataStats.shifts}</div>
+                  <div className="text-gray-600 dark:text-gray-400">確定シフト</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {dataStats.settings ? '✓' : '✗'}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400">設定</div>
+                </div>
+              </div>
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <Button className="bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600">
-                🗑️ 全データ削除（危険）
+          )}
+          
+          <div className="space-y-4">
+            {/* エクスポート */}
+            <div>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">📤 データエクスポート</h3>
+              <div className="flex gap-2 flex-wrap">
+                <Button 
+                  onClick={handleExportData}
+                  disabled={dataOperationLoading}
+                  className="bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600"
+                >
+                  {dataOperationLoading ? '処理中...' : 'JSONエクスポート'}
+                </Button>
+                <Button 
+                  onClick={handleExportEmployeesCSV}
+                  disabled={dataOperationLoading}
+                  className="bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                >
+                  {dataOperationLoading ? '処理中...' : '従業員CSV'}
+                </Button>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                すべてのデータをJSONファイルまたは従業員データをCSVファイルでダウンロードできます。
+              </p>
+            </div>
+            
+            {/* インポート */}
+            <div>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">�📥 データインポート</h3>
+              <Button 
+                onClick={handleImportData}
+                disabled={dataOperationLoading}
+                className="bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+              >
+                {dataOperationLoading ? '処理中...' : 'ファイル選択'}
               </Button>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                この操作は取り消せません。すべてのシフト、従業員、設定データが削除されます。
+                JSONファイルからデータをインポートできます。（準備中）
+              </p>
+            </div>
+            
+            {/* データ統計更新 */}
+            <div>
+              <Button 
+                onClick={loadDataStats}
+                disabled={dataOperationLoading}
+                variant="outline"
+                className="mr-2"
+              >
+                🔄 統計更新
+              </Button>
+            </div>
+            
+            {/* 危険な操作 */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">⚠️ 危険な操作</h3>
+              <Button 
+                onClick={handleDeleteAllData}
+                disabled={dataOperationLoading}
+                className="bg-red-600 dark:bg-red-500 text-white hover:bg-red-700 dark:hover:bg-red-600"
+              >
+                {dataOperationLoading ? '削除中...' : '🗑️ 全データ削除'}
+              </Button>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                <strong>注意:</strong> この操作は取り消せません。あなたの組織のすべてのデータ（従業員、シフト、設定）が削除されます。
+                他のユーザーのデータには影響しません。
               </p>
             </div>
           </div>
