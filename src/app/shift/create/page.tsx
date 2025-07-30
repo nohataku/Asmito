@@ -305,11 +305,11 @@ export default function CreateShiftPage() {
   return (
     <Layout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">AIシフト作成</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">AIシフト作成</h1>
         {!isLoadingSettings && (
           <Button 
             onClick={resetToSystemSettings}
-            className="text-blue-600 border border-blue-600 hover:bg-blue-50 bg-white"
+            className="text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 bg-white dark:bg-gray-800"
           >
             🔄 システム設定に戻す
           </Button>
@@ -320,7 +320,7 @@ export default function CreateShiftPage() {
         <div className="text-center py-8">
           <div className="inline-flex items-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-            <span className="text-gray-600">設定を読み込み中...</span>
+            <span className="text-gray-600 dark:text-gray-400">設定を読み込み中...</span>
           </div>
         </div>
       ) : (
@@ -332,7 +332,7 @@ export default function CreateShiftPage() {
                 <CardTitle className="flex items-center justify-between">
                   <span>スケジュール設定</span>
                   {!isLoadingSettings && (
-                    <span className="text-sm text-green-600 font-normal">
+                    <span className="text-sm text-green-600 dark:text-green-400 font-normal">
                       ✅ システム設定から読み込み済み
                     </span>
                   )}
@@ -342,7 +342,7 @@ export default function CreateShiftPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       開始日
                     </label>
                     <Input
@@ -352,7 +352,7 @@ export default function CreateShiftPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       終了日
                     </label>
                     <Input
@@ -365,7 +365,7 @@ export default function CreateShiftPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       営業開始時間
                     </label>
                     <Input
@@ -378,7 +378,7 @@ export default function CreateShiftPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       営業終了時間
                     </label>
                     <Input
@@ -394,7 +394,7 @@ export default function CreateShiftPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       最小スタッフ数/時
                     </label>
                     <Input
@@ -405,7 +405,7 @@ export default function CreateShiftPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       最大スタッフ数/時
                     </label>
                     <Input
@@ -418,9 +418,9 @@ export default function CreateShiftPage() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-900 mb-3">勤務制約</h4>
-                  <div className="mb-3 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-800">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">勤務制約</h4>
+                  <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
                       これらの制約はシステム設定から自動読み込みされています。
                       変更したい場合は「システム設定に戻す」ボタンで最新の設定を再読み込みするか、
                       設定ページで基本値を変更してください。
@@ -428,7 +428,7 @@ export default function CreateShiftPage() {
                   </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         1日最大勤務時間
                       </label>
                       <Input
@@ -440,7 +440,7 @@ export default function CreateShiftPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         週最大勤務日数
                       </label>
                       <Input
@@ -452,7 +452,7 @@ export default function CreateShiftPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         最低休憩時間（時間）
                       </label>
                       <Input
@@ -467,9 +467,9 @@ export default function CreateShiftPage() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-900 mb-3">シフト割り当てポリシー</h4>
-                  <div className="mb-3 p-3 bg-amber-50 rounded-lg">
-                    <p className="text-sm text-amber-800">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">シフト割り当てポリシー</h4>
+                  <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
                       シフト希望を提出していない従業員への割り当てを制御できます。
                       <br />
                       シフトは提出されたシフト希望の時間帯のみで生成されます。
@@ -481,11 +481,11 @@ export default function CreateShiftPage() {
                         type="checkbox"
                         checked={settings.assignmentPolicy.allowUnrequestedAssignment}
                         onChange={(e) => updateAssignmentPolicy('allowUnrequestedAssignment', e.target.checked)}
-                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                       />
                       <div>
-                        <span className="font-medium text-gray-900">シフト希望未提出者への割り当てを許可</span>
-                        <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900 dark:text-gray-100">シフト希望未提出者への割り当てを許可</span>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           チェックを外すと、シフト希望を提出した従業員のみがシフトに割り当てられます。
                         </p>
                       </div>
@@ -496,11 +496,11 @@ export default function CreateShiftPage() {
                         type="checkbox"
                         checked={settings.assignmentPolicy.prioritizeRequested}
                         onChange={(e) => updateAssignmentPolicy('prioritizeRequested', e.target.checked)}
-                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                       />
                       <div>
-                        <span className="font-medium text-gray-900">シフト希望提出者を優先</span>
-                        <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900 dark:text-gray-100">シフト希望提出者を優先</span>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           シフト希望を提出した従業員を優先的に割り当てます。
                         </p>
                       </div>
@@ -511,7 +511,7 @@ export default function CreateShiftPage() {
                 <Button 
                   onClick={generateShifts} 
                   disabled={isGenerating || !settings.startDate || !settings.endDate}
-                  className="w-full"
+                  className="w-full bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   {isGenerating ? (
                     <div className="flex items-center">
@@ -533,29 +533,29 @@ export default function CreateShiftPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span className="font-medium">登録従業員数</span>
-                    <span className="text-2xl font-bold text-blue-600">{employees.length}</span>
+                  <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">登録従業員数</span>
+                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{employees.length}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="font-medium">シフト希望件数</span>
-                    <span className="text-2xl font-bold text-green-600">{shiftRequests.length}</span>
+                  <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">シフト希望件数</span>
+                    <span className="text-2xl font-bold text-green-600 dark:text-green-400">{shiftRequests.length}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                    <span className="font-medium">生成済みシフト</span>
-                    <span className="text-2xl font-bold text-purple-600">{generatedShifts.length}</span>
+                  <div className="flex justify-between items-center p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">生成済みシフト</span>
+                    <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{generatedShifts.length}</span>
                   </div>
                   
                   {staffingShortages.length > 0 && (
-                    <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                      <span className="font-medium">欠員箇所</span>
-                      <span className="text-2xl font-bold text-red-600">{staffingShortages.length}</span>
+                    <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">欠員箇所</span>
+                      <span className="text-2xl font-bold text-red-600 dark:text-red-400">{staffingShortages.length}</span>
                     </div>
                   )}
                   
                   {generatedShifts.length > 0 && (
-                    <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-green-800 mb-2">🤖 AI最適化結果</h4>
+                    <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 rounded-lg border border-green-200 dark:border-green-600">
+                      <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">🤖 AI最適化結果</h4>
                       {(() => {
                         const summary = generateOptimizationSummary(generatedShifts)
                         const requestedEmployees = new Set(shiftRequests.map(req => req.employeeId))
@@ -564,16 +564,16 @@ export default function CreateShiftPage() {
                         
                         return (
                           <div className="space-y-2">
-                            <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="grid grid-cols-2 gap-2 text-sm text-gray-900 dark:text-gray-100">
                               <div>総シフト数: <span className="font-bold">{summary.totalShifts}</span></div>
                               <div>参加従業員: <span className="font-bold">{summary.uniqueEmployees}名</span></div>
                               <div>総労働時間: <span className="font-bold">{summary.totalHours}h</span></div>
                               <div>平均時間/人: <span className="font-bold">{summary.avgHoursPerEmployee}h</span></div>
                             </div>
-                            <div className="pt-2 border-t border-green-200">
-                              <div className="text-sm text-green-700">
+                            <div className="pt-2 border-t border-green-200 dark:border-green-600">
+                              <div className="text-sm text-green-700 dark:text-green-300">
                                 <div>シフト希望提出者: <span className="font-bold">{requestedEmployees.size}名</span></div>
-                                <div>希望未提出で割り当て: <span className="font-bold text-amber-600">{assignedWithoutRequest}名</span></div>
+                                <div>希望未提出で割り当て: <span className="font-bold text-amber-600 dark:text-amber-400">{assignedWithoutRequest}名</span></div>
                               </div>
                             </div>
                           </div>
@@ -584,8 +584,8 @@ export default function CreateShiftPage() {
                 </div>
 
                 {generatedShifts.length > 0 && (
-                  <div className="mt-6 pt-4 border-t">
-                    <Button onClick={saveShifts} className="w-full bg-green-600 hover:bg-green-700">
+                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <Button onClick={saveShifts} className="w-full bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600">
                       💾 AIシフトを保存
                     </Button>
                   </div>
@@ -598,14 +598,14 @@ export default function CreateShiftPage() {
           {staffingShortages.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-red-600">⚠️ 欠員情報</CardTitle>
+                <CardTitle className="text-red-600 dark:text-red-400">⚠️ 欠員情報</CardTitle>
                 <CardDescription>
                   最小必要人数を確保できていない時間帯（{staffingShortages.length}件）
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <h4 className="font-medium text-red-800 mb-2">📊 欠員統計</h4>
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-600">
+                  <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">📊 欠員統計</h4>
                   {(() => {
                     const totalShortage = staffingShortages.reduce((sum, s) => sum + s.shortage, 0)
                     const shortagesWithRequests = staffingShortages.filter(s => s.hasRequests).length
@@ -613,39 +613,39 @@ export default function CreateShiftPage() {
                     
                     return (
                       <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>総欠員数: <span className="font-bold text-red-600">{totalShortage}名</span></div>
-                        <div>希望あり欠員: <span className="font-bold text-orange-600">{shortagesWithRequests}件</span></div>
-                        <div>希望なし欠員: <span className="font-bold text-gray-600">{shortagesWithoutRequests}件</span></div>
+                        <div>総欠員数: <span className="font-bold text-red-600 dark:text-red-400">{totalShortage}名</span></div>
+                        <div>希望あり欠員: <span className="font-bold text-orange-600 dark:text-orange-400">{shortagesWithRequests}件</span></div>
+                        <div>希望なし欠員: <span className="font-bold text-gray-600 dark:text-gray-400">{shortagesWithoutRequests}件</span></div>
                       </div>
                     )
                   })()}
                 </div>
                 
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <div className="overflow-x-auto scrollbar-custom">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-secondary-700">
+                    <thead className="bg-gray-50 dark:bg-secondary-800">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           日付
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           時間帯
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           必要人数
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           配置済み
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           不足人数
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           シフト希望
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {staffingShortages
                         .sort((a, b) => {
                           if (a.date === b.date) {
@@ -654,29 +654,29 @@ export default function CreateShiftPage() {
                           return a.date.localeCompare(b.date)
                         })
                         .map((shortage, index) => (
-                          <tr key={index} className={shortage.hasRequests ? 'bg-orange-50' : 'bg-gray-50'}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <tr key={index} className={shortage.hasRequests ? 'bg-orange-50 dark:bg-orange-900/30' : 'bg-gray-50 dark:bg-gray-700/50'}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {new Date(shortage.date).toLocaleDateString('ja-JP')}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {shortage.timeSlot}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {shortage.requiredStaff}名
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {shortage.availableStaff}名
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 dark:text-red-400">
                               {shortage.shortage}名
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                               {shortage.hasRequests ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200">
                                   希望あり
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                   希望なし
                                 </span>
                               )}
@@ -687,8 +687,8 @@ export default function CreateShiftPage() {
                   </table>
                 </div>
                 
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
                     💡 <strong>対策案:</strong><br />
                     • 「希望あり」の欠員: 制約条件を緩和するか、他の従業員にシフト希望を追加依頼<br />
                     • 「希望なし」の欠員: 従業員にその時間帯でのシフト希望提出を依頼<br />
@@ -730,25 +730,25 @@ export default function CreateShiftPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <div className="overflow-x-auto scrollbar-custom">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-secondary-700">
+                    <thead className="bg-gray-50 dark:bg-secondary-800">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           日付
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           従業員
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           勤務時間
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           勤務時間数
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {generatedShifts
                         .sort((a, b) => a.date.localeCompare(b.date))
                         .map((shift, index) => {
@@ -757,16 +757,16 @@ export default function CreateShiftPage() {
                           
                           return (
                             <tr key={index}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                 {new Date(shift.date).toLocaleDateString('ja-JP')}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                 {employee?.name || '不明'}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                 {shift.startTime} - {shift.endTime}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                 {duration}時間
                               </td>
                             </tr>
@@ -782,10 +782,10 @@ export default function CreateShiftPage() {
           {employees.length === 0 && (
             <Card>
               <CardContent className="text-center py-8">
-                <p className="text-gray-500 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
                   シフトを作成する前に、従業員を登録してください。
                 </p>
-                <Button onClick={() => window.location.href = '/employees'}>
+                <Button onClick={() => window.location.href = '/employees'} className="bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600">
                   従業員管理へ
                 </Button>
               </CardContent>

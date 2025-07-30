@@ -10,7 +10,7 @@ interface LayoutProps {
 
 export default function Layout({ children, showSidebar = true }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-secondary-900 transition-colors duration-300">
       {showSidebar && <Sidebar />}
       
       <main className={`transition-all duration-300 ease-in-out ${showSidebar ? 'lg:ml-64' : ''}`}>

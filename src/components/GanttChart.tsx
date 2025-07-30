@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Shift } from '@/types/shift'
-import { Employee } from '@/types/employee'
+import { Employee } from '@/types/index'
 import { Button } from './ui/Button'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
@@ -296,33 +296,33 @@ export default function GanttChart({
     <div className="space-y-4">
       {/* エクスポートボタン */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">ガントチャート型シフト表</h3>
-        <Button onClick={() => setShowExportModal(true)}>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">ガントチャート型シフト表</h3>
+        <Button onClick={() => setShowExportModal(true)} className="bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600">
           エクスポート
         </Button>
       </div>
 
       {/* ガントチャート */}
-      <div ref={chartRef} className="bg-white border rounded-lg overflow-hidden">
+      <div ref={chartRef} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {/* ヘッダー */}
-        <div className="p-4 bg-gray-50 border-b">
-          <h2 className="text-xl font-bold text-center">{exportOptions.title}</h2>
-          <p className="text-sm text-gray-600 text-center">
+        <div className="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+          <h2 className="text-xl font-bold text-center text-gray-900 dark:text-gray-100">{exportOptions.title}</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
             期間: {new Date(startDate).toLocaleDateString('ja-JP')} ～ {new Date(endDate).toLocaleDateString('ja-JP')}
           </p>
         </div>
 
         {/* スクロール可能コンテナ */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-custom">
           <div className="min-w-max">
             {/* タイムヘッダー */}
-            <div className="grid grid-cols-[200px_1fr] border-b">
-              <div className="p-3 bg-gray-100 border-r">
-                <strong>従業員 / 時間</strong>
+            <div className="grid grid-cols-[200px_1fr] border-b border-gray-200 dark:border-gray-600">
+              <div className="p-3 bg-gray-100 dark:bg-gray-600 border-r border-gray-200 dark:border-gray-600">
+                <strong className="text-gray-900 dark:text-gray-100">従業員 / 時間</strong>
               </div>
               <div className="flex text-xs">
                 {timeRange.map(time => (
-                  <div key={time} className="flex-none p-2 text-center border-r border-gray-200 bg-gray-100 w-20">
+                  <div key={time} className="flex-none p-2 text-center border-r border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-gray-100 w-20">
                     {time}
                   </div>
                 ))}
@@ -332,8 +332,8 @@ export default function GanttChart({
             {/* 日付ヘッダー */}
             {dateRange.map(date => (
               <div key={date}>
-                <div className="grid grid-cols-[200px_1fr] border-b bg-blue-50">
-                  <div className="p-2 bg-blue-100 border-r font-medium">
+                <div className="grid grid-cols-[200px_1fr] border-b border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/30">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-800 border-r border-gray-200 dark:border-gray-600 font-medium text-gray-900 dark:text-gray-100">
                     {new Date(date).toLocaleDateString('ja-JP', { 
                       month: 'short', 
                       day: 'numeric',
@@ -342,22 +342,22 @@ export default function GanttChart({
                   </div>
                   <div className="h-8 flex">
                     {timeRange.map(time => (
-                      <div key={time} className="flex-none w-20 border-r border-gray-200"></div>
+                      <div key={time} className="flex-none w-20 border-r border-gray-200 dark:border-gray-600"></div>
                     ))}
                   </div>
                 </div>
 
                 {/* 従業員行 */}
                 {employees.map(employee => (
-                  <div key={`${employee.id}-${date}`} className="grid grid-cols-[200px_1fr] border-b hover:bg-gray-50">
-                    <div className="p-3 border-r">
-                      <div className="font-medium text-sm">{employee.name}</div>
-                      <div className="text-xs text-gray-500">{employee.department}</div>
+                  <div key={`${employee.id}-${date}`} className="grid grid-cols-[200px_1fr] border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <div className="p-3 border-r border-gray-200 dark:border-gray-600">
+                      <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{employee.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{employee.department}</div>
                     </div>
                     <div className="relative h-12 flex">
                       {/* 時間グリッド */}
                       {timeRange.map((time, index) => (
-                        <div key={time} className="flex-none w-20 border-r border-gray-100 h-full relative">
+                        <div key={time} className="flex-none w-20 border-r border-gray-100 dark:border-gray-600 h-full relative">
                           {/* シフトバー（この時間帯に含まれる場合のみ表示） */}
                           {shifts
                             .filter(shift => {
@@ -387,7 +387,7 @@ export default function GanttChart({
                               return (
                                 <div
                                   key={shiftIndex}
-                                  className="absolute top-1 bottom-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs rounded px-1 flex items-center justify-center z-10 overflow-hidden cursor-pointer transition-colors"
+                                  className="absolute top-1 bottom-1 bg-indigo-500 dark:bg-indigo-400 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs rounded px-1 flex items-center justify-center z-10 overflow-hidden cursor-pointer transition-colors"
                                   style={{
                                     left: `${leftPercent}%`,
                                     width: `${widthPercent}%`
@@ -416,8 +416,8 @@ export default function GanttChart({
 
         {/* 統計情報 */}
         {exportOptions.includeStatistics && (
-          <div className="p-4 bg-gray-50 border-t">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="p-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-900 dark:text-gray-100">
               <div>
                 <strong>総シフト数:</strong> {shifts.length}
               </div>
@@ -445,12 +445,12 @@ export default function GanttChart({
       {/* エクスポートモーダル */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
-            <h3 className="text-lg font-semibold mb-4">エクスポート設定</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-[90vw]">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">エクスポート設定</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   ファイル形式
                 </label>
                 <select
@@ -459,7 +459,7 @@ export default function GanttChart({
                     ...prev, 
                     format: e.target.value as ExportOptions['format']
                   }))}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md"
                 >
                   <option value="png">PNG画像</option>
                   <option value="jpeg">JPEG画像</option>
@@ -470,14 +470,14 @@ export default function GanttChart({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   ファイル名
                 </label>
                 <input
                   type="text"
                   value={exportOptions.title}
                   onChange={(e) => setExportOptions(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md"
                 />
               </div>
 
@@ -490,9 +490,9 @@ export default function GanttChart({
                       ...prev, 
                       includeEmployeeInfo: e.target.checked 
                     }))}
-                    className="mr-2"
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                   />
-                  従業員情報を含める
+                  <span className="text-gray-900 dark:text-gray-100">従業員情報を含める</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -502,9 +502,9 @@ export default function GanttChart({
                       ...prev, 
                       includeStatistics: e.target.checked 
                     }))}
-                    className="mr-2"
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                   />
-                  統計情報を含める
+                  <span className="text-gray-900 dark:text-gray-100">統計情報を含める</span>
                 </label>
               </div>
             </div>
@@ -513,14 +513,14 @@ export default function GanttChart({
               <Button 
                 onClick={handleExport} 
                 disabled={isExporting}
-                className="flex-1"
+                className="flex-1 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
               >
                 {isExporting ? 'エクスポート中...' : 'エクスポート'}
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setShowExportModal(false)}
-                className="flex-1"
+                className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 キャンセル
               </Button>

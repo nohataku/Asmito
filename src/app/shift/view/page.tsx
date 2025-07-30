@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import GanttChart from '@/components/GanttChart'
 import ShiftCreateModal from '@/components/shift/ShiftCreateModal'
 import ShiftBulkEditModal from '@/components/shift/ShiftBulkEditModal'
-import { Employee } from '@/types/employee'
+import { Employee } from '@/types/index'
 import { Shift } from '@/types/shift'
 import { Schedule } from '@/types'
 import Layout from '@/components/layout/Layout'
@@ -287,8 +287,8 @@ export default function ShiftViewPage() {
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">シフトデータを読み込み中...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">シフトデータを読み込み中...</p>
           </div>
         </div>
       </Layout>
@@ -298,7 +298,7 @@ export default function ShiftViewPage() {
   return (
     <Layout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">シフト表・エクスポート</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">シフト表・エクスポート</h1>
         <div className="flex space-x-2">
           <Button 
             onClick={() => setShowCreateModal(true)}
@@ -330,13 +330,13 @@ export default function ShiftViewPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* スケジュール選択 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     スケジュール選択
                   </label>
                   <select
                     value={selectedSchedule?.id || ''}
                     onChange={(e) => handleScheduleChange(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
+                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">カスタム期間を設定</option>
                     {schedules.map(schedule => (
@@ -351,7 +351,7 @@ export default function ShiftViewPage() {
 
                 {/* 日付範囲 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     開始日
                   </label>
                   <Input
@@ -362,7 +362,7 @@ export default function ShiftViewPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     終了日
                   </label>
                   <Input
@@ -393,36 +393,36 @@ export default function ShiftViewPage() {
               <Card>
                 <CardContent className="p-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600">{shifts.length}</div>
-                    <div className="text-sm text-gray-600">総シフト数</div>
+                    <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{shifts.length}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">総シフト数</div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {shifts.reduce((sum, shift) => {
                         const duration = calculateShiftDuration(shift.startTime, shift.endTime)
                         return sum + duration
                       }, 0).toFixed(1)}
                     </div>
-                    <div className="text-sm text-gray-600">総勤務時間</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">総勤務時間</div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{employees.length}</div>
-                    <div className="text-sm text-gray-600">対象従業員数</div>
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{employees.length}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">対象従業員数</div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                       {employees.length > 0 ? (
                         shifts.reduce((sum, shift) => {
                           const duration = calculateShiftDuration(shift.startTime, shift.endTime)
@@ -430,7 +430,7 @@ export default function ShiftViewPage() {
                         }, 0) / employees.length
                       ).toFixed(1) : 0}
                     </div>
-                    <div className="text-sm text-gray-600">平均勤務時間/人</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">平均勤務時間/人</div>
                   </div>
                 </CardContent>
               </Card>
@@ -451,11 +451,11 @@ export default function ShiftViewPage() {
           ) : (
             <Card>
               <CardContent className="text-center py-12">
-                <div className="text-gray-500 mb-4">
+                <div className="text-gray-500 dark:text-gray-400 mb-4">
                   {employees.length === 0 ? (
                     <>
                       <p className="mb-4">従業員が登録されていません。</p>
-                      <p className="text-sm text-gray-400 mb-4">
+                      <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
                         デバッグ情報: 組織ID = {user?.uid}
                       </p>
                       <Button onClick={() => window.location.href = '/employees'}>
@@ -465,7 +465,7 @@ export default function ShiftViewPage() {
                   ) : shifts.length === 0 ? (
                     <>
                       <p className="mb-4">指定された期間にシフトデータがありません。</p>
-                      <p className="text-sm text-gray-400 mb-4">
+                      <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
                         従業員数: {employees.length}名、スケジュール数: {schedules.length}件
                         {selectedSchedule && (
                           <>

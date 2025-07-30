@@ -1,16 +1,16 @@
 import { collection, doc, addDoc, updateDoc, deleteDoc, getDocs, getDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Employee as EmployeeType } from '@/types/employee';
+import { Employee as EmployeeType } from '@/types/index';
 
 export type Employee = EmployeeType;
 
 export interface CreateEmployeeData {
   name: string;
-  email: string;
+  email?: string;
   department: string;
   position: string;
   hourlyRate: number;
-  joinDate: string;
+  joinDate?: string;
   phone?: string;
   address?: string;
   emergencyContact?: {

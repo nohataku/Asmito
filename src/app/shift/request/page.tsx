@@ -8,8 +8,7 @@ import { EmployeeService } from '@/services/employeeService'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Employee as EmployeeType, ShiftRequest } from '@/types'
-import { Employee } from '@/types/employee'
+import { Employee, ShiftRequest } from '@/types'
 import Layout from '@/components/layout/Layout'
 
 export default function ShiftRequestPage() {
@@ -257,13 +256,13 @@ export default function ShiftRequestPage() {
 
   return (
     <Layout>
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">シフト希望入力</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">シフト希望入力</h1>
 
       {/* 認証ローディング */}
       {loading && (
             <Card>
               <CardContent className="text-center py-8">
-                <p className="text-gray-500">認証状態を確認中...</p>
+                <p className="text-gray-500 dark:text-gray-400">認証状態を確認中...</p>
               </CardContent>
             </Card>
           )}
@@ -272,7 +271,7 @@ export default function ShiftRequestPage() {
           {!loading && !user && (
             <Card>
               <CardContent className="text-center py-8">
-                <p className="text-gray-500 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
                   シフト希望を入力するにはログインが必要です。
                 </p>
                 <Button onClick={() => window.location.href = '/login'}>
@@ -286,7 +285,7 @@ export default function ShiftRequestPage() {
           {!loading && user && isLoading && employees.length === 0 && (
             <Card>
               <CardContent className="text-center py-8">
-                <p className="text-gray-500">従業員データを読み込み中...</p>
+                <p className="text-gray-500 dark:text-gray-400">従業員データを読み込み中...</p>
               </CardContent>
             </Card>
           )}
@@ -295,7 +294,7 @@ export default function ShiftRequestPage() {
           {!loading && user && !isLoading && employees.length === 0 && (
             <Card>
               <CardContent className="text-center py-8">
-                <p className="text-gray-500 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
                   シフト希望を入力する前に、従業員を登録してください。
                 </p>
                 <Button onClick={() => window.location.href = '/employees'}>
@@ -353,11 +352,11 @@ export default function ShiftRequestPage() {
                   <CardContent>
                     <div className="space-y-4">
                       {manualRequests.map((request, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 border rounded-lg">
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
                           <select
                             value={request.employeeId}
                             onChange={(e) => updateManualRequest(index, 'employeeId', e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-md"
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             required
                           >
                             <option value="">従業員を選択</option>
@@ -376,7 +375,7 @@ export default function ShiftRequestPage() {
                           <select
                             value={request.type}
                             onChange={(e) => updateManualRequest(index, 'type', e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-md"
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                           >
                             <option value="work">勤務希望</option>
                             <option value="off">休み希望</option>
@@ -439,13 +438,13 @@ export default function ShiftRequestPage() {
                     <div className="space-y-4">
                       {/* 従業員選択 */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           対象従業員（従業員名を省略した場合に適用されます）
                         </label>
                         <select
                           value={selectedEmployee}
                           onChange={(e) => setSelectedEmployee(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-md w-full"
+                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                         >
                           {employees.map(emp => (
                             <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -453,13 +452,13 @@ export default function ShiftRequestPage() {
                         </select>
                       </div>
 
-                      <div className="bg-gray-100 p-4 rounded-lg">
-                        <h4 className="font-medium mb-2">入力フォーマット例:</h4>
-                        <div className="text-sm text-gray-600 space-y-1">
+                      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+                        <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-100">入力フォーマット例:</h4>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                           <div>勤務希望: 8/4(月) 13:00〜22:00</div>
                           <div>休み希望: 8/1(金) 休み希望</div>
                           <div>従来形式: 田中 7/26 13:00-18:00</div>
-                          <div className="text-xs text-gray-500 mt-2">
+                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                             ※ 新形式では従業員名を省略できます（登録済みの従業員から自動選択）
                           </div>
                         </div>
@@ -469,7 +468,7 @@ export default function ShiftRequestPage() {
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
                         placeholder="シフト希望を入力してください（1行に1つずつ）&#10;例：&#10;8/1(金) 休み希望&#10;8/4(月) 13:00〜22:00&#10;8/5(火) 休み希望"
-                        className="w-full h-64 p-3 border border-gray-300 rounded-md resize-none"
+                        className="w-full h-64 p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                       />
 
                       <div className="flex justify-end">

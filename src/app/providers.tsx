@@ -2,12 +2,14 @@
 
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { useThemeStore } from '@/store/themeStore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { Toaster } from 'react-hot-toast'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore()
+  const { initializeTheme } = useThemeStore()
 
   useEffect(() => {
     // クライアントサイドでのみ実行
@@ -21,6 +23,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [setUser, setLoading])
 
+  useEffect(() => {
+    // テーマの初期化
+    if (typeof window !== 'undefined') {
+      initializeTheme()
+    }
+  }, [initializeTheme])
+
   return (
     <>
       {children}
@@ -29,9 +38,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#fff',
-            color: '#333',
-            border: '1px solid #e2e8f0',
+            background: 'rgb(var(--card-background))',
+            color: 'rgb(var(--foreground-rgb))',
+            border: '1px solid rgb(var(--border-color))',
           },
         }}
       />

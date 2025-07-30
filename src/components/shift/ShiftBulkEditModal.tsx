@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Shift } from '@/types/shift'
-import { Employee } from '@/types/employee'
+import { Employee } from '@/types/index'
 
 interface ShiftBulkEditModalProps {
   shifts: Shift[]
