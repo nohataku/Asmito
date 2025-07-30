@@ -594,6 +594,86 @@ export default function CreateShiftPage() {
             </Card>
           </div>
 
+          {/* 生成されたシフト表示 - ガントチャート */}
+          {generatedShifts.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>生成されたシフト</CardTitle>
+                <CardDescription>
+                  AIが最適化したシフト（{generatedShifts.length}件）- 横スクロールで全時間帯を確認できます
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GanttChart
+                  shifts={generatedShifts}
+                  employees={employees}
+                  startDate={settings.startDate}
+                  endDate={settings.endDate}
+                  operatingHours={settings.operatingHours}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 詳細テーブル表示 */}
+          {generatedShifts.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>シフト詳細</CardTitle>
+                <CardDescription>
+                  生成されたシフトの詳細情報
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto scrollbar-custom">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-secondary-700">
+                    <thead className="bg-gray-50 dark:bg-secondary-800">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          日付
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          従業員
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          勤務時間
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          勤務時間数
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {generatedShifts
+                        .sort((a, b) => a.date.localeCompare(b.date))
+                        .map((shift, index) => {
+                          const employee = employees.find(emp => emp.id === shift.employeeId)
+                          const duration = calculateShiftDuration(shift.startTime, shift.endTime)
+                          
+                          return (
+                            <tr key={index}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                {new Date(shift.date).toLocaleDateString('ja-JP')}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                {employee?.name || '不明'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                {shift.startTime} - {shift.endTime}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                {duration}時間
+                              </td>
+                            </tr>
+                          )
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* 欠員情報表示 */}
           {staffingShortages.length > 0 && (
             <Card>
@@ -605,7 +685,7 @@ export default function CreateShiftPage() {
               </CardHeader>
               <CardContent>
                 <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-600">
-                  <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">📊 欠員統計</h4>
+                  <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">� 欠員統計</h4>
                   {(() => {
                     const totalShortage = staffingShortages.reduce((sum, s) => sum + s.shortage, 0)
                     const shortagesWithRequests = staffingShortages.filter(s => s.hasRequests).length
@@ -694,86 +774,6 @@ export default function CreateShiftPage() {
                     • 「希望なし」の欠員: 従業員にその時間帯でのシフト希望提出を依頼<br />
                     • 「シフト希望未提出者への割り当てを許可」をONにすることで一部解決可能
                   </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 生成されたシフト表示 - ガントチャート */}
-          {generatedShifts.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>生成されたシフト</CardTitle>
-                <CardDescription>
-                  AIが最適化したシフト（{generatedShifts.length}件）- 横スクロールで全時間帯を確認できます
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <GanttChart
-                  shifts={generatedShifts}
-                  employees={employees}
-                  startDate={settings.startDate}
-                  endDate={settings.endDate}
-                  operatingHours={settings.operatingHours}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 詳細テーブル表示 */}
-          {generatedShifts.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>シフト詳細</CardTitle>
-                <CardDescription>
-                  生成されたシフトの詳細情報
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto scrollbar-custom">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-secondary-700">
-                    <thead className="bg-gray-50 dark:bg-secondary-800">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          日付
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          従業員
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          勤務時間
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          勤務時間数
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {generatedShifts
-                        .sort((a, b) => a.date.localeCompare(b.date))
-                        .map((shift, index) => {
-                          const employee = employees.find(emp => emp.id === shift.employeeId)
-                          const duration = calculateShiftDuration(shift.startTime, shift.endTime)
-                          
-                          return (
-                            <tr key={index}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                {new Date(shift.date).toLocaleDateString('ja-JP')}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                {employee?.name || '不明'}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                {shift.startTime} - {shift.endTime}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                {duration}時間
-                              </td>
-                            </tr>
-                          )
-                        })}
-                    </tbody>
-                  </table>
                 </div>
               </CardContent>
             </Card>
