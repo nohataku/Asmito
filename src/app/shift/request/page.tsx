@@ -96,84 +96,221 @@ export default function ShiftRequestPage() {
     lines.forEach(line => {
       const trimmedLine = line.trim()
       
-      // 新しいフォーマット例: "8/1(金) 休み希望" または "8/4(月) 13:00〜22:00"
-      const patterns = [
-        // 新フォーマット - 勤務希望: "8/4(月) 13:00〜22:00"
-        /^(\d{1,2}\/\d{1,2})\([月火水木金土日]\)\s+(\d{1,2}:\d{2})〜(\d{1,2}:\d{2})$/,
-        // 新フォーマット - 勤務希望（ハイフン）: "8/4(月) 13:00-22:00"
-        /^(\d{1,2}\/\d{1,2})\([月火水木金土日]\)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/,
-        // 新フォーマット - 休み希望: "8/1(金) 休み希望"
-        /^(\d{1,2}\/\d{1,2})\([月火水木金土日]\)\s+(休み希望|休み|OFF)$/,
+      // 日付部分を抽出する関数
+      const extractDate = (text: string) => {
+        const dateMatch = text.match(/(\d{1,2}\/\d{1,2})\([月火水木金土日]\)/)
+        return dateMatch ? dateMatch[1] : null
+      }
+
+      // 時間を正規化する関数（漢字表記も対応）
+      const normalizeTime = (timeStr: string) => {
+        // 漢字表記の変換 12時 -> 12:00
+        timeStr = timeStr.replace(/(\d{1,2})時/g, '$1:00')
+        // ハイフンを統一 12ー17 -> 12-17
+        timeStr = timeStr.replace(/ー/g, '-')
+        // 時間の補完 12-17 -> 12:00-17:00
+        timeStr = timeStr.replace(/(\d{1,2})-(\d{1,2})(?![:\d])/g, '$1:00-$2:00')
+        timeStr = timeStr.replace(/(\d{1,2}:\d{2})-(\d{1,2})(?![:\d])/g, '$1-$2:00')
+        return timeStr
+      }
+
+      // 複数の時間帯を分割する関数
+      const splitTimeRanges = (text: string) => {
+        // 複数時間帯の区切り文字で分割
+        const separators = ['or', 'と', '、', '，', ',']
+        let parts = [text]
         
-        // 従来フォーマット（後方互換性のため）
+        separators.forEach(sep => {
+          const newParts: string[] = []
+          parts.forEach(part => {
+            newParts.push(...part.split(sep))
+          })
+          parts = newParts
+        })
+        
+        return parts.map(part => part.trim()).filter(part => part)
+      }
+
+      // パターンマッチング
+      const dateStr = extractDate(trimmedLine)
+      if (!dateStr) return // 日付が見つからない場合はスキップ
+
+      let content = trimmedLine.replace(/\d{1,2}\/\d{1,2}\([月火水木金土日]\)\s*/, '').trim()
+      
+      // 出勤不可パターンの判定
+      const offPatterns = [
+        /^(休み|休み希望|OFF|お休み)$/i,
+        /^[×✕❌]$/,
+        /^$/,  // 空白
+        /通院|病院|休暇|有給/,  // 文章による休み申請
+        /お休みします/
+      ]
+
+      const isOff = offPatterns.some(pattern => pattern.test(content))
+
+      if (isOff) {
+        // 休み希望として登録
+        const selectedEmployeeObj = employees.find(emp => emp.id === selectedEmployee) || employees[0]
+        if (selectedEmployeeObj) {
+          const [month, day] = dateStr.split('/')
+          const currentYear = new Date().getFullYear()
+          const date = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+
+          requests.push({
+            id: Date.now().toString() + Math.random(),
+            employeeId: selectedEmployeeObj.id,
+            date,
+            startTime: '',
+            endTime: '',
+            type: 'off',
+            priority: 'high',
+            status: 'pending',
+            submittedAt: new Date().toISOString()
+          })
+        }
+        return
+      }
+
+      // 出勤可能パターン（◯、〇など）
+      const availablePatterns = [
+        /^[◯○〇]$/,
+        /全てOK/i,
+        /出勤可能/i
+      ]
+
+      const isAvailable = availablePatterns.some(pattern => pattern.test(content))
+      
+      if (isAvailable) {
+        // 出勤可能として登録（時間は空白）
+        const selectedEmployeeObj = employees.find(emp => emp.id === selectedEmployee) || employees[0]
+        if (selectedEmployeeObj) {
+          const [month, day] = dateStr.split('/')
+          const currentYear = new Date().getFullYear()
+          const date = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+
+          requests.push({
+            id: Date.now().toString() + Math.random(),
+            employeeId: selectedEmployeeObj.id,
+            date,
+            startTime: '',
+            endTime: '',
+            type: 'work',
+            priority: 'medium',
+            status: 'pending',
+            submittedAt: new Date().toISOString()
+          })
+        }
+        return
+      }
+
+      // 時間指定パターンの処理
+      content = normalizeTime(content)
+      
+      // 記号付きパターンの処理 (例: 〇12:00〜17:00or17:00〜22:00)
+      content = content.replace(/^[◯○〇]/, '').trim()
+      
+      // 括弧内の時間除外パターン (例: ❌(6-9))
+      const excludeMatch = content.match(/[×✕❌]\((.+?)\)/)
+      if (excludeMatch) {
+        // 除外時間は現在のバージョンでは処理しない（将来の拡張用）
+        return
+      }
+
+      // 時間帯を分割して処理
+      const timeParts = splitTimeRanges(content)
+      
+      timeParts.forEach(part => {
+        part = part.trim()
+        
+        // 時間帯パターンの抽出
+        const timePatterns = [
+          /(\d{1,2}:\d{2})[〜～-](\d{1,2}:\d{2})/,  // 13:00〜22:00
+          /(\d{1,2})-(\d{1,2})/,  // 21-2
+          /(\d{1,2}:\d{2})-(\d{1,2})/,  // 13:00-17
+        ]
+
+        for (const pattern of timePatterns) {
+          const match = part.match(pattern)
+          if (match) {
+            let startTime = match[1]
+            let endTime = match[2]
+
+            // 時間フォーマットの補完
+            if (!startTime.includes(':')) startTime += ':00'
+            if (!endTime.includes(':')) endTime += ':00'
+
+            // 深夜勤務の処理（21-2 のような場合）
+            if (parseInt(endTime.split(':')[0]) <= 6 && parseInt(startTime.split(':')[0]) >= 18) {
+              // 深夜勤務として翌日扱いにする場合の処理（必要に応じて）
+            }
+
+            const selectedEmployeeObj = employees.find(emp => emp.id === selectedEmployee) || employees[0]
+            if (selectedEmployeeObj) {
+              const [month, day] = dateStr.split('/')
+              const currentYear = new Date().getFullYear()
+              const date = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+
+              requests.push({
+                id: Date.now().toString() + Math.random(),
+                employeeId: selectedEmployeeObj.id,
+                date,
+                startTime,
+                endTime,
+                type: 'work',
+                priority: 'medium',
+                status: 'pending',
+                submittedAt: new Date().toISOString()
+              })
+            }
+            break
+          }
+        }
+      })
+
+      // 従来フォーマットの処理（後方互換性）
+      const legacyPatterns = [
         /^(.+?)\s+(\d{1,2}\/\d{1,2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/,  // 勤務希望
         /^(.+?)\s+(\d{1,2}\/\d{1,2})\s+(休み|休み希望|OFF)$/,  // 休み希望
         /^(.+?)\s+(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/,  // 勤務希望（フルデート）
         /^(.+?)\s+(\d{4}-\d{2}-\d{2})\s+(休み|休み希望|OFF)$/   // 休み希望（フルデート）
       ]
 
-      for (let i = 0; i < patterns.length; i++) {
-        const pattern = patterns[i]
+      for (let i = 0; i < legacyPatterns.length; i++) {
+        const pattern = legacyPatterns[i]
         const match = trimmedLine.match(pattern)
         
         if (match) {
-          let employeeName = ''
-          let dateStr = ''
+          let employeeName = match[1].trim()
+          let legacyDateStr = match[2]
           let startTime = ''
           let endTime = ''
           let isOff = false
 
-          if (i <= 2) {
-            // 新フォーマットの場合（従業員名を選択可能にする）
-            dateStr = match[1]
-            
-            if (i === 0 || i === 1) {
-              // 勤務希望
-              startTime = match[2]
-              endTime = match[3]
-            } else {
-              // 休み希望
-              isOff = true
-            }
-            
-            // 従業員が1人しかいない場合は自動選択、複数いる場合は選択された従業員を使用
-            if (employees.length > 0) {
-              const targetEmployee = employees.find(emp => emp.id === selectedEmployee) || employees[0]
-              employeeName = targetEmployee.name
-            }
+          if (match[3] && match[4] && !['休み', '休み希望', 'OFF'].includes(match[3])) {
+            // 勤務希望
+            startTime = match[3]
+            endTime = match[4]
           } else {
-            // 従来フォーマットの場合
-            employeeName = match[1].trim()
-            dateStr = match[2]
-            
-            if (match[3] && match[4] && !['休み', '休み希望', 'OFF'].includes(match[3])) {
-              // 勤務希望
-              startTime = match[3]
-              endTime = match[4]
-            } else {
-              // 休み希望
-              isOff = true
-            }
+            // 休み希望
+            isOff = true
           }
 
           const employee = employees.find(emp => emp.name === employeeName)
           
-          if (employee || (i <= 2 && employees.length > 0)) {
-            let date = dateStr
-            if (dateStr.includes('/')) {
+          if (employee) {
+            let date = legacyDateStr
+            if (legacyDateStr.includes('/')) {
               // MM/dd 形式を yyyy-MM-dd に変換
-              const [month, day] = dateStr.split('/')
+              const [month, day] = legacyDateStr.split('/')
               const currentYear = new Date().getFullYear()
               date = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
             }
-
-            const selectedEmployeeObj = employee || employees.find(emp => emp.id === selectedEmployee) || employees[0]
 
             if (!isOff && startTime && endTime) {
               // 勤務希望
               requests.push({
                 id: Date.now().toString() + Math.random(),
-                employeeId: selectedEmployeeObj.id,
+                employeeId: employee.id,
                 date,
                 startTime,
                 endTime,
@@ -186,7 +323,7 @@ export default function ShiftRequestPage() {
               // 休み希望
               requests.push({
                 id: Date.now().toString() + Math.random(),
-                employeeId: selectedEmployeeObj.id,
+                employeeId: employee.id,
                 date,
                 startTime: '',
                 endTime: '',
@@ -455,9 +592,25 @@ export default function ShiftRequestPage() {
                       <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
                         <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-100">入力フォーマット例:</h4>
                         <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                          <div>勤務希望: 8/4(月) 13:00〜22:00</div>
-                          <div>休み希望: 8/1(金) 休み希望</div>
-                          <div>従来形式: 田中 7/26 13:00-18:00</div>
+                          <div><strong>勤務希望:</strong></div>
+                          <div>• 8/4(月) 13:00〜22:00</div>
+                          <div>• 8/5(火) 21-2</div>
+                          <div>• 8/5(火) 12時ー17時</div>
+                          <div>• 8/5(火)6-9　13-17 (複数時間)</div>
+                          <div>• 8/2(土)13-17or17-21or22 (or区切り)</div>
+                          <div>• 8/14(木) 6-9 と 22-2 ("と"区切り)</div>
+                          <div>• 8/5(火)〇12:00〜17:00or17:00〜22:00 (記号付き)</div>
+                          <div><strong>出勤可能:</strong></div>
+                          <div>• 8/1(金) ◯</div>
+                          <div>• 8/1(金) 〇</div>
+                          <div><strong>休み希望:</strong></div>
+                          <div>• 8/1(金) 休み</div>
+                          <div>• 8/2(土) ❌</div>
+                          <div>• 8/1(金) ×</div>
+                          <div>• 8/2(土) （空白）</div>
+                          <div>• 8/5通院の為お休みします。</div>
+                          <div><strong>従来形式:</strong></div>
+                          <div>• 田中 7/26 13:00-18:00</div>
                           <div className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                             ※ 新形式では従業員名を省略できます（登録済みの従業員から自動選択）
                           </div>
@@ -467,7 +620,7 @@ export default function ShiftRequestPage() {
                       <textarea
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
-                        placeholder="シフト希望を入力してください（1行に1つずつ）&#10;例：&#10;8/1(金) 休み希望&#10;8/4(月) 13:00〜22:00&#10;8/5(火) 休み希望"
+                        placeholder="シフト希望を入力してください（1行に1つずつ）&#10;例：&#10;8/1(金) 休み&#10;8/4(月) 13:00〜22:00&#10;8/5(火) 21-2&#10;8/2(土) ◯&#10;8/3(日) ×&#10;8/6通院のためお休みします"
                         className="w-full h-64 p-3 border border-gray-300 dark:border-gray-600 rounded-md resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                       />
 
