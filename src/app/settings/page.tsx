@@ -712,7 +712,7 @@ export default function SettingsPage() {
           <div className="space-y-4">
             {/* エクスポート */}
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">📤 データエクスポート</h3>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">データエクスポート</h3>
               <div className="flex gap-2 flex-wrap">
                 <Button 
                   onClick={handleExportData}
@@ -736,7 +736,7 @@ export default function SettingsPage() {
             
             {/* インポート */}
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">�📥 データインポート</h3>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">データインポート</h3>
               <Button 
                 onClick={handleImportData}
                 disabled={dataOperationLoading}
@@ -763,7 +763,7 @@ export default function SettingsPage() {
             
             {/* 危険な操作 */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">⚠️ 危険な操作</h3>
+              <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">危険な操作</h3>
               <Button 
                 onClick={handleDeleteAllData}
                 disabled={dataOperationLoading}

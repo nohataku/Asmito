@@ -44,8 +44,17 @@ export default function ShiftRequestsPage() {
 
         // 表示期間に応じた開始日と終了日を計算
         const dates = getDisplayDates();
-        const startDateStr = dates[0].toISOString().split('T')[0];
-        const endDateStr = dates[dates.length - 1].toISOString().split('T')[0];
+        let startDateStr = '';
+        let endDateStr = '';
+        
+        if (dates.length > 0) {
+          // タイムゾーン問題を回避するため、ローカル日付として処理
+          const startDate = dates[0];
+          const endDate = dates[dates.length - 1];
+          
+          startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+          endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+        }
 
         // シフト希望データを取得
         const shiftRequestData = await ShiftRequestService.getShiftRequests(
@@ -432,7 +441,11 @@ export default function ShiftRequestsPage() {
                           </div>
                         </td>
                         {displayDates.map((date, dateIndex) => {
-                          const dateStr = date.toISOString().split('T')[0];
+                          // タイムゾーン問題を回避するため、ローカル日付として処理
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const dateStr = `${year}-${month}-${day}`;
                           const dayRequests = getShiftRequestsForEmployeeAndDate(employee.id, dateStr);
                           
                           return (

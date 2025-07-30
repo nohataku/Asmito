@@ -79,14 +79,20 @@ export const getEmployeeShiftRequests = async (
     );
 
     if (weekStartDate) {
-      const weekEndDate = new Date(weekStartDate);
+      const weekEndDate = new Date(weekStartDate + 'T00:00:00');
       weekEndDate.setDate(weekEndDate.getDate() + 6);
+      
+      // ローカル日付として処理
+      const year = weekEndDate.getFullYear();
+      const month = String(weekEndDate.getMonth() + 1).padStart(2, '0');
+      const day = String(weekEndDate.getDate()).padStart(2, '0');
+      const weekEndDateStr = `${year}-${month}-${day}`;
       
       requestQuery = query(
         collection(db, 'organizations', organizationId, 'shiftRequests'),
         where('employeeId', '==', employeeId),
         where('date', '>=', weekStartDate),
-        where('date', '<=', weekEndDate.toISOString().split('T')[0]),
+        where('date', '<=', weekEndDateStr),
         orderBy('date', 'asc')
       );
     }
@@ -112,13 +118,19 @@ export const getAllShiftRequests = async (
     );
 
     if (weekStartDate) {
-      const weekEndDate = new Date(weekStartDate);
+      const weekEndDate = new Date(weekStartDate + 'T00:00:00');
       weekEndDate.setDate(weekEndDate.getDate() + 6);
+      
+      // ローカル日付として処理
+      const year = weekEndDate.getFullYear();
+      const month = String(weekEndDate.getMonth() + 1).padStart(2, '0');
+      const day = String(weekEndDate.getDate()).padStart(2, '0');
+      const weekEndDateStr = `${year}-${month}-${day}`;
       
       requestQuery = query(
         collection(db, 'organizations', organizationId, 'shiftRequests'),
         where('date', '>=', weekStartDate),
-        where('date', '<=', weekEndDate.toISOString().split('T')[0]),
+        where('date', '<=', weekEndDateStr),
         orderBy('date', 'asc'),
         orderBy('employeeName', 'asc')
       );
@@ -181,21 +193,26 @@ export const deleteShiftRequest = async (
   }
 };
 
-// 週の日付を生成するユーティリティ関数
+// 週の日付を生成するユーティリティ関数（タイムゾーン問題を回避）
 export const getWeekDates = (startDate: string): string[] => {
   const dates = [];
-  const start = new Date(startDate);
+  const start = new Date(startDate + 'T00:00:00');
   
   for (let i = 0; i < 7; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
-    dates.push(date.toISOString().split('T')[0]);
+    
+    // ローカル日付として処理
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    dates.push(`${year}-${month}-${day}`);
   }
   
   return dates;
 };
 
-// 今週の開始日を取得（月曜日）
+// 今週の開始日を取得（月曜日）- タイムゾーン問題を回避
 export const getCurrentWeekStart = (): string => {
   const today = new Date();
   const dayOfWeek = today.getDay();
@@ -204,5 +221,10 @@ export const getCurrentWeekStart = (): string => {
   const monday = new Date(today);
   monday.setDate(today.getDate() + mondayOffset);
   
-  return monday.toISOString().split('T')[0];
+  // ローカル日付として処理
+  const year = monday.getFullYear();
+  const month = String(monday.getMonth() + 1).padStart(2, '0');
+  const day = String(monday.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 };

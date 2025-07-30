@@ -37,14 +37,20 @@ export default function ShiftRequestForm({
   const [request, setRequest] = useState<DetailedShiftRequest>({
     employeeId,
     employeeName,
-    weekStartDate: new Date().toISOString().split('T')[0],
+    weekStartDate: (() => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })(),
     dailyRequests: {},
     generalNotes: ''
   });
 
-  // 現在の週の日付を生成
+  // 現在の週の日付を生成（タイムゾーン問題を回避）
   const getCurrentWeekDates = () => {
-    const startDate = new Date(request.weekStartDate);
+    const startDate = new Date(request.weekStartDate + 'T00:00:00');
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(startDate);
@@ -137,7 +143,11 @@ export default function ShiftRequestForm({
             <h3 className="text-lg font-medium text-gray-900">日別シフト希望</h3>
             
             {weekDates.map((date, index) => {
-              const dateStr = date.toISOString().split('T')[0];
+              // タイムゾーン問題を回避するため、ローカル日付として処理
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              const dateStr = `${year}-${month}-${day}`;
               const dailyRequest = getDailyRequest(dateStr);
               
               return (

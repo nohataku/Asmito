@@ -108,6 +108,11 @@ export interface ShiftRequest {
   status: 'pending' | 'approved' | 'rejected'
   submittedAt: string
   createdAt?: Date
+  notes?: string
+  // AI解析関連
+  aiProcessed?: boolean
+  confidence?: number
+  originalText?: string
 }
 
 export interface Shift {
