@@ -40,6 +40,8 @@ export default function GanttChart({
   onShiftDelete
 }: GanttChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
+  const timeHeaderRef = useRef<HTMLDivElement>(null)
+  const mainContentRef = useRef<HTMLDivElement>(null)
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     format: 'png',
     title: 'シフト表',
@@ -82,6 +84,56 @@ export default function GanttChart({
   }
   
   const timeRange = generateTimeRange(operatingHours.start, operatingHours.end)
+
+  // スクロール同期のためのuseEffect
+  useEffect(() => {
+    const mainScrollbar = mainContentRef.current
+
+    if (!mainScrollbar) {
+      console.log('Main scrollbar not found')
+      return
+    }
+
+    console.log('Setting up scroll sync')
+
+    const handleMainScrollbarScroll = () => {
+      const scrollLeft = mainScrollbar.scrollLeft
+      console.log('Scrolling:', scrollLeft)
+      
+      // 時間ヘッダーのスクロール位置を同期
+      const timeHeader = timeHeaderRef.current
+      if (timeHeader) {
+        timeHeader.style.transform = `translateX(-${scrollLeft}px)`
+      }
+      
+      // 日付ヘッダーのスクロール位置を同期
+      const dateHeaders = document.querySelectorAll('.date-header-scroll')
+      console.log('Date headers found:', dateHeaders.length)
+      dateHeaders.forEach((header) => {
+        if (header instanceof HTMLElement) {
+          header.style.transform = `translateX(-${scrollLeft}px)`
+        }
+      })
+      
+      // すべての従業員行のスクロール位置を同期
+      const employeeRows = document.querySelectorAll('.employee-row-scroll')
+      console.log('Employee rows found:', employeeRows.length)
+      employeeRows.forEach((row) => {
+        if (row instanceof HTMLElement) {
+          row.style.transform = `translateX(-${scrollLeft}px)`
+        }
+      })
+    }
+
+    // 初期化時にも実行
+    handleMainScrollbarScroll()
+
+    mainScrollbar.addEventListener('scroll', handleMainScrollbarScroll)
+
+    return () => {
+      mainScrollbar.removeEventListener('scroll', handleMainScrollbarScroll)
+    }
+  }, [employees.length, dateRange.length])
 
   const exportAsImage = async (format: 'png' | 'jpeg') => {
     if (!chartRef.current) return
@@ -312,27 +364,37 @@ export default function GanttChart({
           </p>
         </div>
 
-        {/* スクロール可能コンテナ */}
-        <div className="overflow-x-auto scrollbar-custom">
-          <div className="min-w-max">
-            {/* タイムヘッダー */}
-            <div className="grid grid-cols-[200px_1fr] border-b border-gray-200 dark:border-gray-600">
-              <div className="p-3 bg-gray-100 dark:bg-gray-600 border-r border-gray-200 dark:border-gray-600">
-                <strong className="text-gray-900 dark:text-gray-100">従業員 / 時間</strong>
-              </div>
-              <div className="flex text-xs">
+        {/* 固定ヘッダーとスクロール可能コンテナ */}
+        <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+          {/* 固定時間ヘッダー */}
+          <div className="grid grid-cols-[200px_1fr] bg-gray-100 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-600">
+            <div className="p-3 border-r border-gray-200 dark:border-gray-600">
+              <strong className="text-gray-900 dark:text-gray-100">従業員 / 時間</strong>
+            </div>
+            <div className="overflow-hidden">
+              <div 
+                ref={timeHeaderRef}
+                className="flex text-xs scrollbar-hide"
+                style={{ 
+                  minWidth: `${timeRange.length * 80}px`,
+                  overflowX: 'hidden'
+                }}
+              >
                 {timeRange.map(time => (
-                  <div key={time} className="flex-none p-2 text-center border-r border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-gray-100 w-20">
+                  <div key={time} className="flex-none p-2 text-center border-r border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100" style={{ width: '80px' }}>
                     {time}
                   </div>
                 ))}
               </div>
             </div>
+          </div>
 
+          {/* スクロール可能なメインコンテンツ */}
+          <div className="max-h-96 overflow-y-auto scrollbar-custom">
             {/* 日付ヘッダー */}
             {dateRange.map(date => (
               <div key={date}>
-                <div className="grid grid-cols-[200px_1fr] border-b border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/30">
+                <div className="grid grid-cols-[200px_1fr] bg-blue-50 dark:bg-blue-900/30 border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10">
                   <div className="p-2 bg-blue-100 dark:bg-blue-800 border-r border-gray-200 dark:border-gray-600 font-medium text-gray-900 dark:text-gray-100">
                     {new Date(date).toLocaleDateString('ja-JP', { 
                       month: 'short', 
@@ -340,77 +402,107 @@ export default function GanttChart({
                       weekday: 'short'
                     })}
                   </div>
-                  <div className="h-8 flex">
-                    {timeRange.map(time => (
-                      <div key={time} className="flex-none w-20 border-r border-gray-200 dark:border-gray-600"></div>
-                    ))}
+                  <div className="overflow-hidden">
+                    <div 
+                      className="date-header-scroll h-8 flex scrollbar-hide" 
+                      style={{ 
+                        minWidth: `${timeRange.length * 80}px`,
+                        overflowX: 'hidden'
+                      }}
+                    >
+                      {timeRange.map(time => (
+                        <div key={time} className="flex-none border-r border-gray-200 dark:border-gray-600" style={{ width: '80px' }}></div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* 従業員行 */}
-                {employees.map(employee => (
+                {employees.map((employee, employeeIndex) => (
                   <div key={`${employee.id}-${date}`} className="grid grid-cols-[200px_1fr] border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <div className="p-3 border-r border-gray-200 dark:border-gray-600">
+                    <div className="p-3 border-r border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
                       <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{employee.name}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">{employee.department}</div>
                     </div>
-                    <div className="relative h-12 flex">
-                      {/* 時間グリッド */}
-                      {timeRange.map((time, index) => (
-                        <div key={time} className="flex-none w-20 border-r border-gray-100 dark:border-gray-600 h-full relative">
-                          {/* シフトバー（この時間帯に含まれる場合のみ表示） */}
-                          {shifts
-                            .filter(shift => {
-                              if (shift.employeeId !== employee.id || shift.date !== date) return false
-                              const shiftStart = timeToMinutes(shift.startTime)
-                              const shiftEnd = timeToMinutes(shift.endTime)
-                              const timeStart = timeToMinutes(time)
-                              const timeEnd = timeStart + 60
-                              return shiftStart < timeEnd && shiftEnd > timeStart
-                            })
-                            .map((shift, shiftIndex) => {
-                              const shiftStart = timeToMinutes(shift.startTime)
-                              const shiftEnd = timeToMinutes(shift.endTime)
-                              const timeStart = timeToMinutes(time)
-                              const timeEnd = timeStart + 60
-                              
-                              // この時間帯でのシフトバーの位置とサイズを計算
-                              const overlapStart = Math.max(shiftStart, timeStart)
-                              const overlapEnd = Math.min(shiftEnd, timeEnd)
-                              const overlapDuration = overlapEnd - overlapStart
-                              
-                              if (overlapDuration <= 0) return null
-                              
-                              const leftPercent = ((overlapStart - timeStart) / 60) * 100
-                              const widthPercent = (overlapDuration / 60) * 100
-                              
-                              return (
-                                <div
-                                  key={shiftIndex}
-                                  className="absolute top-1 bottom-1 bg-indigo-500 dark:bg-indigo-400 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs rounded px-1 flex items-center justify-center z-10 overflow-hidden cursor-pointer transition-colors"
-                                  style={{
-                                    left: `${leftPercent}%`,
-                                    width: `${widthPercent}%`
-                                  }}
-                                  title={`${shift.startTime} - ${shift.endTime} (クリックで編集)`}
-                                  onClick={() => handleShiftClick(shift)}
-                                >
-                                  {/* 開始時刻のみの時間帯では時間を表示 */}
-                                  {timeToMinutes(time) === shiftStart && (
-                                    <span className="truncate text-[10px] leading-tight">
-                                      {shift.startTime.slice(0, 5)}-{shift.endTime.slice(0, 5)}
-                                    </span>
-                                  )}
-                                </div>
-                              )
-                            })}
-                        </div>
-                      ))}
+                    <div className="overflow-hidden">
+                      <div 
+                        className="employee-row-scroll relative h-12 flex scrollbar-hide"
+                        style={{ 
+                          minWidth: `${timeRange.length * 80}px`,
+                          overflowX: 'hidden'
+                        }}
+                      >
+                        {timeRange.map((time, index) => (
+                          <div key={time} className="flex-none border-r border-gray-100 dark:border-gray-600 h-full relative" style={{ width: '80px' }}>
+                            {/* シフトバー（この時間帯に含まれる場合のみ表示） */}
+                            {shifts
+                              .filter(shift => {
+                                if (shift.employeeId !== employee.id || shift.date !== date) return false
+                                const shiftStart = timeToMinutes(shift.startTime)
+                                const shiftEnd = timeToMinutes(shift.endTime)
+                                const timeStart = timeToMinutes(time)
+                                const timeEnd = timeStart + 60
+                                return shiftStart < timeEnd && shiftEnd > timeStart
+                              })
+                              .map((shift, shiftIndex) => {
+                                const shiftStart = timeToMinutes(shift.startTime)
+                                const shiftEnd = timeToMinutes(shift.endTime)
+                                const timeStart = timeToMinutes(time)
+                                const timeEnd = timeStart + 60
+                                
+                                // この時間帯でのシフトバーの位置とサイズを計算
+                                const overlapStart = Math.max(shiftStart, timeStart)
+                                const overlapEnd = Math.min(shiftEnd, timeEnd)
+                                const overlapDuration = overlapEnd - overlapStart
+                                
+                                if (overlapDuration <= 0) return null
+                                
+                                const leftPercent = ((overlapStart - timeStart) / 60) * 100
+                                const widthPercent = (overlapDuration / 60) * 100
+                                
+                                return (
+                                  <div
+                                    key={shiftIndex}
+                                    className="absolute top-1 bottom-1 bg-indigo-500 dark:bg-indigo-400 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs rounded px-1 flex items-center justify-center z-10 overflow-hidden cursor-pointer transition-colors"
+                                    style={{
+                                      left: `${leftPercent}%`,
+                                      width: `${widthPercent}%`
+                                    }}
+                                    title={`${shift.startTime} - ${shift.endTime} (クリックで編集)`}
+                                    onClick={() => handleShiftClick(shift)}
+                                  >
+                                    {/* 開始時刻のみの時間帯では時間を表示 */}
+                                    {timeToMinutes(time) === shiftStart && (
+                                      <span className="truncate text-[10px] leading-tight">
+                                        {shift.startTime.slice(0, 5)}-{shift.endTime.slice(0, 5)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             ))}
+          </div>
+
+          {/* 最下部のスクロールバー */}
+          <div className="grid grid-cols-[200px_1fr]">
+            <div></div>
+            <div 
+              ref={mainContentRef}
+              className="overflow-x-auto scrollbar-custom"
+              style={{ height: '20px' }}
+            >
+              <div style={{ 
+                width: `${timeRange.length * 80}px`,
+                height: '1px'
+              }}></div>
+            </div>
           </div>
         </div>
 
