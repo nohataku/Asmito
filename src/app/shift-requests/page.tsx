@@ -299,6 +299,35 @@ export default function ShiftRequestsPage() {
     }
   };
 
+  // シフト希望削除
+  const deleteShiftRequest = async (requestId: string, employeeName: string, date: string) => {
+    const confirmMessage = `${employeeName}さんの${date}のシフト希望を削除しますか？\nこの操作は取り消せません。`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await ShiftRequestService.deleteShiftRequest(requestId);
+
+      // ローカル状態から削除
+      setShiftRequests(prev => 
+        prev.filter(request => request.id !== requestId)
+      );
+
+      // 編集状態をリセット（削除した希望が編集中だった場合）
+      if (editingRequest === requestId) {
+        setEditingRequest(null);
+        setEditForm({ startTime: '', endTime: '', notes: '' });
+      }
+
+      alert('シフト希望を削除しました。');
+    } catch (error) {
+      console.error('シフト希望の削除に失敗しました:', error);
+      alert('シフト希望の削除に失敗しました。');
+    }
+  };
+
   return (
     <Layout>
       {/* ヘッダー */}
@@ -524,6 +553,13 @@ export default function ShiftRequestsPage() {
                                               className="text-xs px-2 py-1"
                                             >
                                               キャンセル
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              onClick={() => deleteShiftRequest(request.id!, employee.name, dateStr)}
+                                              className="text-xs px-2 py-1 bg-red-600 hover:bg-red-700 text-white"
+                                            >
+                                              削除
                                             </Button>
                                           </div>
                                         </div>
