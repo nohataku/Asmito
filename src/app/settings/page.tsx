@@ -13,6 +13,7 @@ import { useThemeStore } from '@/store/themeStore'
 import { useAuthStore } from '@/store/authStore'
 import { DataManagementService, type DataStats } from '@/services/dataManagementService'
 import { AIDataManager } from '@/lib/aiDataManager'
+import { UpdateNotificationService } from '@/services/updateNotificationService'
 
 interface SystemSettings {
   company: {
@@ -100,6 +101,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [dataStats, setDataStats] = useState<DataStats | null>(null)
   const [dataOperationLoading, setDataOperationLoading] = useState(false)
+  const [showUpdateHistory, setShowUpdateHistory] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -635,6 +637,100 @@ export default function SettingsPage() {
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
               現在のテーマ: <span className="font-medium">{theme === 'system' ? 'システム (自動)' : theme === 'light' ? 'ライト' : 'ダーク'}</span>
+            </div>
+          </div>
+        </Card>
+
+        {/* アップデート履歴 */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">📋 アップデート履歴</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Asmitoの最新情報とアップデート履歴を確認できます。
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setShowUpdateHistory(!showUpdateHistory)}
+                className="text-sm"
+              >
+                {showUpdateHistory ? '履歴を閉じる' : '履歴を表示'}
+              </Button>
+            </div>
+            
+            {showUpdateHistory && (
+              <div className="mt-4 space-y-6 max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                {UpdateNotificationService.getAllUpdates().map((update) => (
+                  <div key={update.id} className="border-l-4 border-l-blue-400 pl-4 pb-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100 break-words">
+                          {update.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded flex-shrink-0">
+                            v{update.version}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {update.date}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 break-words">
+                      {update.description}
+                    </p>
+                    
+                    {update.features && update.features.length > 0 && (
+                      <div className="mb-2">
+                        <h4 className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">✨ 新機能</h4>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                          {update.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {update.improvements && update.improvements.length > 0 && (
+                      <div className="mb-2">
+                        <h4 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">🔧 改善点</h4>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                          {update.improvements.map((improvement, index) => (
+                            <li key={index}>{improvement}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {update.bugFixes && update.bugFixes.length > 0 && (
+                      <div className="mb-2">
+                        <h4 className="text-xs font-medium text-red-700 dark:text-red-300 mb-1">🐛 バグ修正</h4>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                          {update.bugFixes.map((fix, index) => (
+                            <li key={index}>{fix}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* 開発者向け機能 */}
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button 
+                onClick={() => {
+                  UpdateNotificationService.clearAllDismissed()
+                  alert('すべての既読状態をリセットしました。ページを再読み込みするとアップデート通知が再表示されます。')
+                }}
+                variant="outline"
+                className="text-xs"
+              >
+                🔄 既読状態をリセット（開発・テスト用）
+              </Button>
             </div>
           </div>
         </Card>
