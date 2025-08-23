@@ -80,15 +80,6 @@ export class AnnouncementService {
     return announcements.slice(0, count)
   }
 
-  // お知らせのタイプに応じたアイコンを取得
-  static getTypeIcon(type: Announcement['type']): string {
-    const icons = {
-      important: '�',
-      normal: '📢'
-    }
-    return icons[type] || '📢'
-  }
-
   // 優先度に応じた色クラスを取得
   static getPriorityColorClass(priority: Announcement['priority']): string {
     const colors = {

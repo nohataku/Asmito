@@ -104,7 +104,7 @@ export default function ShiftEditModal({
         updatedAt: new Date()
       })
 
-      console.log('✅ シフトを更新しました:', updatedShift)
+      console.log('シフトを更新しました:', updatedShift)
       onSave(updatedShift)
       onClose()
     } catch (error) {

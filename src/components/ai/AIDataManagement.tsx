@@ -33,7 +33,7 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
     
     try {
       setIsLoading(true)
-      console.log('🤖 FirebaseからAIデータを読み込み中...')
+      console.log('FirebaseからAIデータを読み込み中...')
       
       await dataManager.loadFromFirebase(user.uid)
       setHasLoadedFromFirebase(true)
@@ -85,7 +85,7 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
     
     try {
       setIsLoading(true)
-      console.log('💾 AIデータをFirebaseに保存中...')
+      console.log('AIデータをFirebaseに保存中...')
       
       await dataManager.saveToFirebase(user.uid)
       
@@ -97,10 +97,10 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
         })
       }
       
-      onAlert?.('✅ AIデータが正常にFirebaseに保存されました。', 'success')
+      onAlert?.('AIデータが正常にFirebaseに保存されました。', 'success')
     } catch (error) {
       console.error('データ保存エラー:', error)
-      onAlert?.('❌ データの保存に失敗しました。', 'error')
+      onAlert?.('データの保存に失敗しました。', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -111,7 +111,7 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
     
     try {
       setIsLoading(true)
-      console.log('📊 サンプルデータを生成中...')
+      console.log('サンプルデータを生成中...')
 
       // 各従業員のサンプルデータを生成
       employees.forEach(employee => {
@@ -161,7 +161,7 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
     
     try {
       setIsLoading(true)
-      console.log('🗑️ AIデータを削除中...')
+      console.log('AIデータを削除中...')
       
       // Firebaseからすべてのデータを削除
       await dataManager.deleteAllData(user.uid)
@@ -173,29 +173,29 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
       setHasLoadedFromFirebase(false)
       
       // 削除後にデフォルトデータで初期化
-      console.log('🔄 デフォルトデータで初期化中...')
+      console.log('デフォルトデータで初期化中...')
       initializeDefaultData()
-      
-      onAlert?.('✅ すべてのAI学習データが削除され、初期設定で再初期化されました。', 'success')
-      
+
+      onAlert?.('すべてのAI学習データが削除され、初期設定で再初期化されました。', 'success')
+
     } catch (error) {
       console.error('AIデータ削除エラー:', error)
-      onAlert?.('❌ AIデータの削除に失敗しました。', 'error')
+      onAlert?.('AIデータの削除に失敗しました。', 'error')
     } finally {
       setIsLoading(false)
     }
   }
 
   const tabs = [
-    { id: 'employee' as const, label: '👤 従業員パフォーマンス', description: '従業員の詳細データと評価' },
-    { id: 'business' as const, label: '⏰ ピーク時間・祝日設定', description: 'ピーク時間帯と祝日データの管理' }
+    { id: 'employee' as const, label: '従業員パフォーマンス', description: '従業員の詳細データと評価' },
+    { id: 'business' as const, label: 'ピーク時間・祝日設定', description: 'ピーク時間帯と祝日データの管理' }
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🤖 AI データ管理</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">AI データ管理</h2>
           <p className="text-gray-600 dark:text-gray-400">従業員データとビジネス分析データの詳細管理</p>
         </div>
         <div className="flex gap-3">
@@ -204,7 +204,7 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
             disabled={isLoading}
             variant="outline"
           >
-            {isLoading ? '生成中...' : '📊 サンプル生成'}
+            {isLoading ? '生成中...' : 'サンプル生成'}
           </Button>
           <Button 
             onClick={deleteAllAIData}
@@ -212,20 +212,20 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
             variant="outline"
             className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-300 dark:border-red-800"
           >
-            {isLoading ? '削除中...' : '🗑️ 学習データ削除'}
+            {isLoading ? '削除中...' : '学習データ削除'}
           </Button>
           <Button 
             onClick={saveToFirebase}
             disabled={isLoading}
           >
-            {isLoading ? '保存中...' : '💾 データ保存'}
+            {isLoading ? '保存中...' : 'データ保存'}
           </Button>
         </div>
       </div>
 
       <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          <strong>🤖 AI活用方法:</strong>
+          <strong>AI活用方法:</strong>
           <br />• <strong>シフト最適化:</strong> 従業員の勤務信頼性・パフォーマンス評価に基づいて最適な人員配置を自動計算
           <br />• <strong>需要予測:</strong> ピーク時間帯と祝日データから必要スタッフ数を自動調整
           <br />• <strong>コスト最適化:</strong> 従業員の時給・交通費・スキルレベルを考慮した効率的なシフト作成
@@ -831,7 +831,7 @@ export default function AIDataManagement({ employees, onDataUpdate, onAlert }: A
 
           <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
             <p className="text-sm text-green-800 dark:text-green-200">
-              💡 <strong>データ活用のポイント:</strong>
+              <strong>データ活用のポイント:</strong>
               <br />• ピーク時間帯の設定により、AI最適化でその時間帯により多くのスタッフが配置されます
               <br />• 祝日の需要倍率設定により、特別な日の人員配置が自動調整されます
               <br />• 過去の営業データを分析し、実際の傾向に合わせて設定を更新してください

@@ -323,21 +323,21 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">システム設定</h1>
           <div className="flex gap-2">
             {saved && (
-              <span className="text-green-600 dark:text-green-400 font-medium">✅ 保存しました</span>
+              <span className="text-green-600 dark:text-green-400 font-medium">保存しました</span>
             )}
             <Button 
               onClick={saveSettings} 
               disabled={saving}
               className="bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
             >
-              {saving ? '保存中...' : '💾 設定を保存'}
+              {saving ? '保存中...' : '設定を保存'}
             </Button>
           </div>
         </div>
 
         {/* 会社情報 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🏢 会社情報</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">会社情報</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">会社名</label>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
 
         {/* 勤務設定 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">⏰ 勤務設定</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">勤務設定</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">営業開始時間</label>
@@ -427,7 +427,7 @@ export default function SettingsPage() {
 
         {/* 労働制約 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">📋 労働制約</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">労働制約</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">1日最大労働時間</label>
@@ -481,7 +481,7 @@ export default function SettingsPage() {
 
         {/* シフト割り当てポリシー */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">📋 シフト割り当てポリシー</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">シフト割り当てポリシー</h2>
           <div className="space-y-4">
             <label className="flex items-center">
               <input
@@ -513,7 +513,7 @@ export default function SettingsPage() {
 
         {/* AI設定 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🤖 AI最適化設定</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">AI最適化設定</h2>
           <div className="space-y-4">
             <label className="flex items-center">
               <input
@@ -585,7 +585,7 @@ export default function SettingsPage() {
                 <div className="text-sm text-gray-900 dark:text-gray-100">
                   合計: {Object.values(settings.ai.optimizationWeight).reduce((sum, val) => sum + val, 0)}%
                   {Object.values(settings.ai.optimizationWeight).reduce((sum, val) => sum + val, 0) !== 100 && (
-                    <span className="text-red-600 dark:text-red-400 ml-2">⚠️ 合計を100%にしてください</span>
+                    <span className="text-red-600 dark:text-red-400 ml-2">合計を100%にしてください</span>
                   )}
                 </div>
               </div>
@@ -595,7 +595,7 @@ export default function SettingsPage() {
 
         {/* テーマ設定 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🎨 テーマ設定</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">テーマ設定</h2>
           <div className="space-y-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               アプリケーションの外観テーマを選択できます。システムを選択すると、お使いのOSやブラウザの設定に基づいて自動的に切り替わります。
@@ -643,7 +643,7 @@ export default function SettingsPage() {
 
         {/* アップデート履歴 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">📋 アップデート履歴</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">アップデート履歴</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -695,7 +695,7 @@ export default function SettingsPage() {
                     
                     {update.improvements && update.improvements.length > 0 && (
                       <div className="mb-2">
-                        <h4 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">🔧 改善点</h4>
+                        <h4 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">改善点</h4>
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
                           {update.improvements.map((improvement, index) => (
                             <li key={index}>{improvement}</li>
@@ -706,7 +706,7 @@ export default function SettingsPage() {
                     
                     {update.bugFixes && update.bugFixes.length > 0 && (
                       <div className="mb-2">
-                        <h4 className="text-xs font-medium text-red-700 dark:text-red-300 mb-1">🐛 バグ修正</h4>
+                        <h4 className="text-xs font-medium text-red-700 dark:text-red-300 mb-1">バグ修正</h4>
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
                           {update.bugFixes.map((fix, index) => (
                             <li key={index}>{fix}</li>
@@ -729,7 +729,7 @@ export default function SettingsPage() {
                 variant="outline"
                 className="text-xs"
               >
-                🔄 既読状態をリセット（開発・テスト用）
+                既読状態をリセット（開発・テスト用）
               </Button>
             </div>
           </div>
@@ -737,12 +737,12 @@ export default function SettingsPage() {
 
         {/* データ管理 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🗄️ データ管理</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">データ管理</h2>
           
           {/* データ統計 */}
           {dataStats && (
             <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">📊 データ統計</h3>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">データ統計</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{dataStats.employees}</div>
@@ -814,7 +814,7 @@ export default function SettingsPage() {
                 variant="outline"
                 className="mr-2"
               >
-                🔄 統計更新
+                統計更新
               </Button>
             </div>
             

@@ -800,7 +800,7 @@ export default function ShiftRequestPage() {
                           <div>• 夜勤（22時-6時）できます</div>
                           <div>• 可能であれば8/10の夕方シフトお願いします</div>
                           <div className="text-xs text-green-600 dark:text-green-400 mt-2">
-                            💡 コツ: 日付と時間を具体的に書くとより正確に解析されます
+                            コツ: 日付と時間を具体的に書くとより正確に解析されます
                           </div>
                         </div>
                       </div>

@@ -429,7 +429,7 @@ export default function EmployeesPage() {
                             onClick={handleAutoCalculateRates}
                             disabled={!formData.hourlyRate}
                           >
-                            🔄 自動設定
+                            自動設定
                           </Button>
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">

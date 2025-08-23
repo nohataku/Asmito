@@ -64,7 +64,6 @@ export default function AnnouncementPanel({ isOpen, onClose }: AnnouncementPanel
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🔔</span>
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               運営からのお知らせ
             </h2>
@@ -94,14 +93,14 @@ export default function AnnouncementPanel({ isOpen, onClose }: AnnouncementPanel
               size="sm"
               onClick={() => setSelectedType('important')}
             >
-              � 重要
+              重要
             </Button>
             <Button
               variant={selectedType === 'normal' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedType('normal')}
             >
-              📢 通常
+              通常
             </Button>
           </div>
         </div>
@@ -138,9 +137,6 @@ export default function AnnouncementPanel({ isOpen, onClose }: AnnouncementPanel
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
-                            <span className="text-xl">
-                              {AnnouncementService.getTypeIcon(announcement.type)}
-                            </span>
                             <span className={`flex-1 min-w-0 ${announcement.isImportant ? 'text-red-700 dark:text-red-200' : ''}`}>
                               {announcement.title}
                             </span>
@@ -189,7 +185,7 @@ export default function AnnouncementPanel({ isOpen, onClose }: AnnouncementPanel
               {getFilteredAnnouncements().length}件のお知らせ
             </span>
             <Button onClick={loadAnnouncements} variant="outline" size="sm">
-              🔄 更新
+              更新
             </Button>
           </div>
         </div>

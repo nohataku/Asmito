@@ -24,7 +24,7 @@ export class AIDataFirebaseService {
         organizationId,
         updatedAt: new Date().toISOString()
       })
-      console.log(`✅ 従業員パフォーマンスデータを保存: ${employeeId}`)
+      console.log(`従業員パフォーマンスデータを保存: ${employeeId}`)
     } catch (error) {
       console.error('従業員パフォーマンスデータの保存に失敗:', error)
       throw error
@@ -98,7 +98,7 @@ export class AIDataFirebaseService {
         organizationId,
         updatedAt: new Date().toISOString()
       })
-      console.log(`✅ ビジネス分析データを保存: ${organizationId}`)
+      console.log(`ビジネス分析データを保存: ${organizationId}`)
     } catch (error) {
       console.error('ビジネス分析データの保存に失敗:', error)
       throw error
@@ -137,7 +137,7 @@ export class AIDataFirebaseService {
     businessData: BusinessInsightData
   ): Promise<void> {
     try {
-      console.log('🤖 全AIデータを一括保存中...')
+      console.log('全AIデータを一括保存中...')
       
       // 従業員パフォーマンスデータを保存
       const performancePromises = Array.from(performanceData.entries()).map(
@@ -148,7 +148,7 @@ export class AIDataFirebaseService {
       // ビジネスデータを保存
       await this.saveBusinessInsightData(organizationId, businessData)
 
-      console.log('✅ 全AIデータの一括保存が完了しました')
+      console.log('全AIデータの一括保存が完了しました')
       
     } catch (error) {
       console.error('全AIデータの一括保存に失敗:', error)
@@ -164,14 +164,14 @@ export class AIDataFirebaseService {
     businessData: BusinessInsightData | null
   }> {
     try {
-      console.log('🤖 全AIデータを一括読み込み中...')
+      console.log('全AIデータを一括読み込み中...')
       
       const [performanceData, businessData] = await Promise.all([
         this.loadAllEmployeePerformanceData(organizationId),
         this.loadBusinessInsightData(organizationId)
       ])
 
-      console.log('✅ 全AIデータの一括読み込みが完了しました')
+      console.log('全AIデータの一括読み込みが完了しました')
       
       return {
         performanceData,
@@ -275,7 +275,7 @@ export class AIDataFirebaseService {
       })
 
       await Promise.all(samplePromises)
-      console.log('✅ サンプルデータのインポートが完了しました')
+      console.log('サンプルデータのインポートが完了しました')
       
     } catch (error) {
       console.error('サンプルデータのインポートに失敗:', error)
@@ -310,7 +310,7 @@ export class AIDataFirebaseService {
    */
   static async deleteAllAIData(organizationId: string): Promise<void> {
     try {
-      console.log('🗑️ 全AIデータを削除中...', organizationId)
+      console.log('全AIデータを削除中...', organizationId)
       
       // 従業員パフォーマンスデータを削除
       const performanceQuery = query(
@@ -328,7 +328,7 @@ export class AIDataFirebaseService {
       const businessDocRef = doc(db, 'aiBusinessData', organizationId)
       await deleteDoc(businessDocRef)
       
-      console.log(`✅ 全AIデータの削除が完了しました: 従業員データ${performanceSnapshot.size}件、ビジネスデータ1件`)
+      console.log(`全AIデータの削除が完了しました: 従業員データ${performanceSnapshot.size}件、ビジネスデータ1件`)
       
     } catch (error) {
       console.error('全AIデータの削除に失敗:', error)
