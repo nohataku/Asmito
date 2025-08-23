@@ -41,12 +41,6 @@ interface SystemSettings {
     allowUnrequestedAssignment: boolean
     prioritizeRequested: boolean
   }
-  notifications: {
-    emailNotifications: boolean
-    smsNotifications: boolean
-    shiftReminders: boolean
-    requestNotifications: boolean
-  }
   ai: {
     enableAI: boolean
     optimizationWeight: {
@@ -84,12 +78,6 @@ const defaultSettings: SystemSettings = {
   assignmentPolicy: {
     allowUnrequestedAssignment: true,
     prioritizeRequested: true
-  },
-  notifications: {
-    emailNotifications: true,
-    smsNotifications: false,
-    shiftReminders: true,
-    requestNotifications: true
   },
   ai: {
     enableAI: true,
@@ -486,49 +474,6 @@ export default function SettingsPage() {
                 onChange={(e) => updateSettings('constraints.maxMonthlyHours', parseInt(e.target.value))}
               />
             </div>
-          </div>
-        </Card>
-
-        {/* 通知設定 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🔔 通知設定</h2>
-          <div className="space-y-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.emailNotifications}
-                onChange={(e) => updateSettings('notifications.emailNotifications', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">メール通知を有効にする</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.smsNotifications}
-                onChange={(e) => updateSettings('notifications.smsNotifications', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">SMS通知を有効にする</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.shiftReminders}
-                onChange={(e) => updateSettings('notifications.shiftReminders', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">シフトリマインダーを有効にする</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.requestNotifications}
-                onChange={(e) => updateSettings('notifications.requestNotifications', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">リクエスト通知を有効にする</span>
-            </label>
           </div>
         </Card>
 
