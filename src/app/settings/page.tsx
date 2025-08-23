@@ -7,6 +7,8 @@ import Layout from '@/components/layout/Layout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { AlertModal } from '@/components/ui/Modal'
+import { useModal } from '@/hooks/useModal'
 import { useThemeStore } from '@/store/themeStore'
 import { useAuthStore } from '@/store/authStore'
 import { DataManagementService, type DataStats } from '@/services/dataManagementService'
@@ -102,6 +104,7 @@ const defaultSettings: SystemSettings = {
 
 export default function SettingsPage() {
   const { user } = useAuthStore()
+  const { alertState, showAlert, closeAlert } = useModal()
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -153,7 +156,7 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 3000)
     } catch (error) {
       console.error('設定の保存に失敗しました:', error)
-      alert('設定の保存に失敗しました。')
+      showAlert('設定の保存に失敗しました。', { type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -183,10 +186,10 @@ export default function SettingsPage() {
       setDataOperationLoading(true)
       const exportData = await DataManagementService.exportData(user.uid)
       DataManagementService.downloadAsJSON(exportData)
-      alert('データエクスポートが完了しました。')
+      showAlert('データエクスポートが完了しました。', { type: 'success' })
     } catch (error) {
       console.error('データエクスポートに失敗しました:', error)
-      alert('データエクスポートに失敗しました。')
+      showAlert('データエクスポートに失敗しました。', { type: 'error' })
     } finally {
       setDataOperationLoading(false)
     }
@@ -200,10 +203,10 @@ export default function SettingsPage() {
       setDataOperationLoading(true)
       const exportData = await DataManagementService.exportData(user.uid)
       DataManagementService.downloadEmployeesAsCSV(exportData.employees)
-      alert('従業員CSVエクスポートが完了しました。')
+      showAlert('従業員CSVエクスポートが完了しました。', { type: 'success' })
     } catch (error) {
       console.error('従業員CSVエクスポートに失敗しました:', error)
-      alert('従業員CSVエクスポートに失敗しました。')
+      showAlert('従業員CSVエクスポートに失敗しました。', { type: 'error' })
     } finally {
       setDataOperationLoading(false)
     }
@@ -224,15 +227,15 @@ export default function SettingsPage() {
             const validation = DataManagementService.validateImportData(data)
             
             if (!validation.isValid) {
-              alert(`データが無効です:\n${validation.errors.join('\n')}`)
+              showAlert(`データが無効です:\n${validation.errors.join('\n')}`, { type: 'error' })
               return
             }
             
             // インポート処理は複雑なため、現在は準備中として表示
-            alert('データインポート機能は準備中です。')
+            showAlert('データインポート機能は準備中です。', { type: 'info' })
           } catch (error) {
             console.error('データインポートに失敗しました:', error)
-            alert('データインポートに失敗しました。ファイル形式を確認してください。')
+            showAlert('データインポートに失敗しました。ファイル形式を確認してください。', { type: 'error' })
           }
         }
         reader.readAsText(file)
@@ -287,7 +290,7 @@ export default function SettingsPage() {
         '• AIデータ: 削除済み（パフォーマンスデータ・学習データ）'
       ].join('\n')
       
-      alert(message)
+      showAlert(message, { type: 'success' })
       
       // データ統計を再読み込み
       await loadDataStats()
@@ -297,7 +300,7 @@ export default function SettingsPage() {
       
     } catch (error) {
       console.error('全データ削除に失敗しました:', error)
-      alert('全データ削除に失敗しました。一部のデータが残っている可能性があります。')
+      showAlert('全データ削除に失敗しました。一部のデータが残っている可能性があります。', { type: 'error' })
     } finally {
       setDataOperationLoading(false)
     }
@@ -793,6 +796,15 @@ export default function SettingsPage() {
           </div>
         </Card>
       </div>
+
+      {/* アラートモーダル */}
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        title={alertState.options.title}
+        message={alertState.message}
+        type={alertState.options.type}
+      />
     </Layout>
   )
 }

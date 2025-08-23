@@ -11,9 +11,10 @@ import { useAuthStore } from '@/store/authStore'
 interface AIDataManagementProps {
   employees: Employee[]
   onDataUpdate?: (updatedData: any) => void
+  onAlert?: (message: string, type?: 'success' | 'error' | 'warning' | 'info') => void
 }
 
-export default function AIDataManagement({ employees, onDataUpdate }: AIDataManagementProps) {
+export default function AIDataManagement({ employees, onDataUpdate, onAlert }: AIDataManagementProps) {
   const { user } = useAuthStore()
   const [activeTab, setActiveTab] = useState<'employee' | 'business'>('employee')
   const [selectedEmployee, setSelectedEmployee] = useState<string>('')
@@ -96,10 +97,10 @@ export default function AIDataManagement({ employees, onDataUpdate }: AIDataMana
         })
       }
       
-      alert('✅ AIデータが正常にFirebaseに保存されました。')
+      onAlert?.('✅ AIデータが正常にFirebaseに保存されました。', 'success')
     } catch (error) {
       console.error('データ保存エラー:', error)
-      alert('❌ データの保存に失敗しました。')
+      onAlert?.('❌ データの保存に失敗しました。', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -126,7 +127,7 @@ export default function AIDataManagement({ employees, onDataUpdate }: AIDataMana
       // Firebaseに保存
       await dataManager.saveToFirebase(user.uid)
       
-      alert('📊 サンプルデータを生成してFirebaseに保存しました。')
+      onAlert?.('📊 サンプルデータを生成してFirebaseに保存しました。', 'success')
       
       // 画面を更新
       if (selectedEmployee) {
@@ -135,7 +136,7 @@ export default function AIDataManagement({ employees, onDataUpdate }: AIDataMana
       
     } catch (error) {
       console.error('サンプルデータ生成エラー:', error)
-      alert('❌ サンプルデータの生成に失敗しました。')
+      onAlert?.('❌ サンプルデータの生成に失敗しました。', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -175,11 +176,11 @@ export default function AIDataManagement({ employees, onDataUpdate }: AIDataMana
       console.log('🔄 デフォルトデータで初期化中...')
       initializeDefaultData()
       
-      alert('✅ すべてのAI学習データが削除され、初期設定で再初期化されました。')
+      onAlert?.('✅ すべてのAI学習データが削除され、初期設定で再初期化されました。', 'success')
       
     } catch (error) {
       console.error('AIデータ削除エラー:', error)
-      alert('❌ AIデータの削除に失敗しました。')
+      onAlert?.('❌ AIデータの削除に失敗しました。', 'error')
     } finally {
       setIsLoading(false)
     }

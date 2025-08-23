@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { AlertModal, ConfirmModal } from '@/components/ui/Modal';
+import { useModal } from '@/hooks/useModal';
 import Layout from '@/components/layout/Layout';
 import Link from 'next/link';
 import { EmployeeService } from '@/services/employeeService';
@@ -12,6 +14,7 @@ import { useAuthStore } from '@/store/authStore';
 
 export default function ShiftRequestsPage() {
   const { user } = useAuthStore();
+  const { alertState, confirmState, showAlert, closeAlert, showConfirm, closeConfirm } = useModal();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [shiftRequests, setShiftRequests] = useState<ShiftRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -295,7 +298,7 @@ export default function ShiftRequestsPage() {
       setEditForm({ startTime: '', endTime: '', notes: '' });
     } catch (error) {
       console.error('シフト希望の更新に失敗しました:', error);
-      alert('シフト希望の更新に失敗しました。');
+      showAlert('シフト希望の更新に失敗しました。', { type: 'error' });
     }
   };
 
@@ -303,7 +306,14 @@ export default function ShiftRequestsPage() {
   const deleteShiftRequest = async (requestId: string, employeeName: string, date: string) => {
     const confirmMessage = `${employeeName}さんの${date}のシフト希望を削除しますか？\nこの操作は取り消せません。`;
     
-    if (!window.confirm(confirmMessage)) {
+    const confirmed = await showConfirm(confirmMessage, {
+      title: 'シフト希望の削除',
+      confirmText: '削除',
+      cancelText: 'キャンセル',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -321,10 +331,10 @@ export default function ShiftRequestsPage() {
         setEditForm({ startTime: '', endTime: '', notes: '' });
       }
 
-      alert('シフト希望を削除しました。');
+      showAlert('シフト希望を削除しました。', { type: 'success' });
     } catch (error) {
       console.error('シフト希望の削除に失敗しました:', error);
-      alert('シフト希望の削除に失敗しました。');
+      showAlert('シフト希望の削除に失敗しました。', { type: 'error' });
     }
   };
 
@@ -602,6 +612,27 @@ export default function ShiftRequestsPage() {
           </Card>
         </div>
       )}
+
+      {/* アラートモーダル */}
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        title={alertState.options.title}
+        message={alertState.message}
+        type={alertState.options.type}
+      />
+
+      {/* 確認モーダル */}
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        onClose={() => closeConfirm(false)}
+        onConfirm={() => closeConfirm(true)}
+        title={confirmState.options.title}
+        message={confirmState.message}
+        confirmText={confirmState.options.confirmText}
+        cancelText={confirmState.options.cancelText}
+        type={confirmState.options.type}
+      />
     </Layout>
   );
 }
