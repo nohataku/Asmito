@@ -226,7 +226,6 @@
 **外部サービス連携:**
 - Google Workspace（Sheets, Forms, Calendar）
 - Microsoft 365（Excel, Outlook）
-- Slack / Discord（通知・無料）
 - Zapier（自動化・無料プラン）
 
 **API提供:**
@@ -299,7 +298,6 @@
 ### 6.1 短期（1年以内）
 - シフト希望のスマートフォンアプリ
 - 出退勤打刻機能との連携（勤怠との統合）
-- LINEやSlackへの自動通知機能
 - 多言語対応（英語・中国語・韓国語）
 - .asmito ファイル仕様の標準化・公開
 

@@ -8,11 +8,14 @@ import { EmployeeService } from '@/services/employeeService'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { AlertModal } from '@/components/ui/Modal'
+import { useModal } from '@/hooks/useModal'
 import { Employee, ShiftRequest } from '@/types'
 import Layout from '@/components/layout/Layout'
 
 export default function ShiftRequestPage() {
   const { user, loading } = useAuthStore()
+  const { alertState, showAlert, closeAlert } = useModal()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [selectedEmployee, setSelectedEmployee] = useState<string>('')
   const [selectedMethod, setSelectedMethod] = useState<'manual' | 'text' | 'ai' | 'csv'>('manual')
@@ -61,9 +64,9 @@ export default function ShiftRequestPage() {
       console.error('従業員データの取得に失敗しました:', error)
       // より詳細なエラー情報を表示
       if (error instanceof Error) {
-        alert(`従業員データの取得エラー: ${error.message}`)
+        showAlert(`従業員データの取得エラー: ${error.message}`, { type: 'error' })
       } else {
-        alert('従業員データの取得に失敗しました。ネットワーク接続やFirebase設定を確認してください。')
+        showAlert('従業員データの取得に失敗しました。ネットワーク接続やFirebase設定を確認してください。', { type: 'error' })
       }
     } finally {
       setIsLoading(false)
@@ -94,7 +97,7 @@ export default function ShiftRequestPage() {
   // AI解析機能
   const handleAIAnalysis = async () => {
     if (!textInput.trim()) {
-      alert('解析するテキストを入力してください。');
+      showAlert('解析するテキストを入力してください。', { type: 'warning' });
       return;
     }
 
@@ -118,10 +121,10 @@ export default function ShiftRequestPage() {
       const result = await response.json();
       setAiResults(result.data);
       
-      alert(`AI解析が完了しました。${result.data.length}件の結果を確認してください。`);
+      showAlert(`AI解析が完了しました。${result.data.length}件の結果を確認してください。`, { type: 'success' });
     } catch (error) {
       console.error('AI解析エラー:', error);
-      alert('AI解析に失敗しました。従来の解析方法をお試しください。');
+      showAlert('AI解析に失敗しました。従来の解析方法をお試しください。', { type: 'error' });
     } finally {
       setIsAIProcessing(false);
     }
@@ -181,14 +184,14 @@ export default function ShiftRequestPage() {
         }
       }
 
-      alert(`${submittedCount}件のシフト希望を登録しました。`);
+      showAlert(`${submittedCount}件のシフト希望を登録しました。`, { type: 'success' });
       
       // 登録済みの結果を削除
       setAiResults(prev => prev.filter((_, index) => index !== resultIndex));
       
     } catch (error) {
       console.error('シフト希望の登録に失敗しました:', error);
-      alert('シフト希望の登録に失敗しました。');
+      showAlert('シフト希望の登録に失敗しました。', { type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -469,11 +472,11 @@ export default function ShiftRequestPage() {
         })
       }
 
-      alert(`${requests.length}件のシフト希望を登録しました。`)
+      showAlert(`${requests.length}件のシフト希望を登録しました。`, { type: 'success' })
       setTextInput('')
     } catch (error) {
       console.error('シフト希望の登録に失敗しました:', error)
-      alert('シフト希望の登録に失敗しました。')
+      showAlert('シフト希望の登録に失敗しました。', { type: 'error' })
     } finally {
       setIsLoading(false)
     }
@@ -496,11 +499,11 @@ export default function ShiftRequestPage() {
         })
       }
 
-      alert(`${validRequests.length}件のシフト希望を登録しました。`)
+      showAlert(`${validRequests.length}件のシフト希望を登録しました。`, { type: 'success' })
       setManualRequests([])
     } catch (error) {
       console.error('シフト希望の登録に失敗しました:', error)
-      alert('シフト希望の登録に失敗しました。')
+      showAlert('シフト希望の登録に失敗しました。', { type: 'error' })
     } finally {
       setIsLoading(false)
     }
@@ -797,7 +800,7 @@ export default function ShiftRequestPage() {
                           <div>• 夜勤（22時-6時）できます</div>
                           <div>• 可能であれば8/10の夕方シフトお願いします</div>
                           <div className="text-xs text-green-600 dark:text-green-400 mt-2">
-                            💡 コツ: 日付と時間を具体的に書くとより正確に解析されます
+                            コツ: 日付と時間を具体的に書くとより正確に解析されます
                           </div>
                         </div>
                       </div>
@@ -907,6 +910,15 @@ export default function ShiftRequestPage() {
               )}
             </>
           )}
+
+      {/* アラートモーダル */}
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        title={alertState.options.title}
+        message={alertState.message}
+        type={alertState.options.type}
+      />
     </Layout>
   )
 }

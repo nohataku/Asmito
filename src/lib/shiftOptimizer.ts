@@ -86,7 +86,7 @@ export class ShiftOptimizer {
     const dates = this.generateDateRange()
     
     for (const date of dates) {
-      console.log(`📅 ${date} のシフト最適化中...`)
+      console.log(`${date} のシフト最適化中...`)
       this.optimizeDay(date)
       this.checkStaffingShortages(date)
     }
@@ -96,7 +96,7 @@ export class ShiftOptimizer {
 
     // 3. 最終スコア計算とレポート
     const score = this.calculateOverallScore()
-    console.log(`✅ 最適化完了 - 総合スコア: ${score.toFixed(2)}`)
+    console.log(`最適化完了 - 総合スコア: ${score.toFixed(2)}`)
 
     // 3.5. 生成されたシフトの検証
     this.validateGeneratedShifts()
@@ -136,10 +136,10 @@ export class ShiftOptimizer {
       availableEmployees = availableEmployees.filter(emp => 
         requestedEmployeeIds.includes(emp.id)
       )
-      console.log(`🚫 シフト希望未提出者を除外: ${originalCount}名 → ${availableEmployees.length}名`)
+      console.log(`シフト希望未提出者を除外: ${originalCount}名 → ${availableEmployees.length}名`)
     }
 
-    console.log(`📋 ${date}: 利用可能従業員${availableEmployees.length}名、勤務希望${workRequests.length}件、休み希望${offRequests.length}件`)
+    console.log(`${date}: 利用可能従業員${availableEmployees.length}名、勤務希望${workRequests.length}件、休み希望${offRequests.length}件`)
 
     // シフト希望が提出されている時間帯のみを処理
     const requestedTimeSlots = new Set<string>()
@@ -148,21 +148,21 @@ export class ShiftOptimizer {
         // 時刻を時間単位に正規化（例: "09:30" → "09:00"）
         const hour = req.startTime.split(':')[0]
         requestedTimeSlots.add(`${hour}:00`)
-        console.log(`� シフト希望時間帯: ${req.startTime} → ${hour}:00`)
+        console.log(`シフト希望時間帯: ${req.startTime} → ${hour}:00`)
       }
     })
 
     if (requestedTimeSlots.size === 0) {
-      console.log(`📋 ${date}: シフト希望時間帯がないため、スキップします`)
+      console.log(`${date}: シフト希望時間帯がないため、スキップします`)
       return
     }
 
-    console.log(`🕐 ${date}: シフト希望のある時間帯: ${Array.from(requestedTimeSlots).sort().join(', ')}`)
-    
+    console.log(`${date}: シフト希望のある時間帯: ${Array.from(requestedTimeSlots).sort().join(', ')}`)
+
     // シフト希望がある時間帯のみ最適化
     for (const timeSlot of Array.from(requestedTimeSlots).sort()) {
       const timeMinutes = this.timeToMinutes(timeSlot)
-      console.log(`⏰ ${timeSlot}の時間帯を最適化中（シフト希望あり）...`)
+      console.log(`${timeSlot}の時間帯を最適化中（シフト希望あり）...`)
       this.optimizeTimeSlot(date, timeMinutes, availableEmployees, workRequests)
     }
   }
@@ -189,11 +189,11 @@ export class ShiftOptimizer {
     })
 
     if (timeSlotRequests.length === 0) {
-      console.log(`📋 ${date} ${startTime}: この時間帯にシフト希望がないためスキップ`)
+      console.log(`${date} ${startTime}: この時間帯にシフト希望がないためスキップ`)
       return
     }
 
-    console.log(`📝 ${date} ${startTime}: ${timeSlotRequests.length}件のシフト希望あり`)
+    console.log(`${date} ${startTime}: ${timeSlotRequests.length}件のシフト希望あり`)
 
     // その時間帯で既に働いている人数
     const currentStaff = this.generatedShifts.filter(shift => {
@@ -216,7 +216,7 @@ export class ShiftOptimizer {
     for (const request of timeSlotRequests) {
       const employee = availableEmployees.find(emp => emp.id === request.employeeId)
       if (!employee) {
-        console.log(`❌ 従業員が見つかりません: ${request.employeeId}`)
+        console.log(`従業員が見つかりません: ${request.employeeId}`)
         continue
       }
 
@@ -226,7 +226,7 @@ export class ShiftOptimizer {
       )
       
       if (alreadyWorking) {
-        console.log(`⏭️ ${employee.name}: 既に${date}に勤務予定のためスキップ`)
+        console.log(`${employee.name}: 既に${date}に勤務予定のためスキップ`)
         continue
       }
 
@@ -253,17 +253,17 @@ export class ShiftOptimizer {
       // 勤務時間の妥当性チェック
       const duration = this.calculateShiftDuration(actualStartTime, actualEndTime)
       if (duration <= 0) {
-        console.log(`❌ ${employee.name}: 無効な勤務時間 ${actualStartTime}-${actualEndTime}`)
+        console.log(`${employee.name}: 無効な勤務時間 ${actualStartTime}-${actualEndTime}`)
         continue
       }
 
       // 制約チェック
       const conflicts = this.checkConstraints(employee.id, date, actualStartTime, actualEndTime)
       
-      console.log(`👤 ${employee.name}: ${actualStartTime}-${actualEndTime} (${duration}h) - ${conflicts.length > 0 ? conflicts.join(', ') : '✅ 問題なし'}`)
+      console.log(`👤 ${employee.name}: ${actualStartTime}-${actualEndTime} (${duration}h) - ${conflicts.length > 0 ? conflicts.join(', ') : '問題なし'}`)
       
       if (conflicts.length === 0) {
-        console.log(`✅ シフト生成: ${employee.name} ${actualStartTime}-${actualEndTime} (${duration}時間)`)
+        console.log(`シフト生成: ${employee.name} ${actualStartTime}-${actualEndTime} (${duration}時間)`)
         this.generatedShifts.push({
           id: `shift_${Date.now()}_${Math.random()}`,
           employeeId: employee.id,
@@ -279,7 +279,7 @@ export class ShiftOptimizer {
           updatedAt: new Date()
         })
       } else {
-        console.log(`❌ ${employee.name}: 制約違反により割り当て不可`)
+        console.log(`${employee.name}: 制約違反により割り当て不可`)
       }
     }
   }
@@ -314,9 +314,9 @@ export class ShiftOptimizer {
       const hasAnyRequest = workRequests.some(req => req.employeeId === employee.id)
       if (hasAnyRequest) {
         score += 200 // シフト希望を提出している場合は大幅加点
-        console.log(`  🌟 ${employee.name}: 希望者優先により+200点`)
+        console.log(`${employee.name}: 希望者優先により+200点`)
       } else {
-        console.log(`  ⭐ ${employee.name}: シフト希望なし`)
+        console.log(`${employee.name}: シフト希望なし`)
       }
     }
 
@@ -369,7 +369,7 @@ export class ShiftOptimizer {
     const conflicts: string[] = []
     const employee = this.employees.find(e => e.id === employeeId)
     
-    console.log(`🔍 従業員${employee?.name || employeeId}の制約チェック (${date} ${startTime}-${endTime}):`)
+    console.log(`従業員${employee?.name || employeeId}の制約チェック (${date} ${startTime}-${endTime}):`)
 
     // 1日の最大勤務時間チェック
     const shiftDuration = this.calculateShiftDuration(startTime, endTime)
@@ -379,16 +379,16 @@ export class ShiftOptimizer {
     if (shiftDuration <= 0) {
       const conflict = '無効な勤務時間（開始時間 >= 終了時間）'
       conflicts.push(conflict)
-      console.log(`  ❌ ${conflict}`)
+      console.log(`  ${conflict}`)
       return conflicts // 他のチェックは無意味なので早期返却
     }
     
     if (shiftDuration > this.settings.constraints.maxHoursPerDay) {
       const conflict = '1日の最大勤務時間を超過'
       conflicts.push(conflict)
-      console.log(`  ❌ ${conflict}`)
+      console.log(`  ${conflict}`)
     } else {
-      console.log(`  ✅ 1日の勤務時間OK`)
+      console.log(`  1日の勤務時間OK`)
     }
 
     // 週の最大勤務日数チェック
@@ -397,9 +397,9 @@ export class ShiftOptimizer {
     if (weeklyShifts.length >= this.settings.constraints.maxDaysPerWeek) {
       const conflict = '週の最大勤務日数を超過'
       conflicts.push(conflict)
-      console.log(`  ❌ ${conflict}`)
+      console.log(`  ${conflict}`)
     } else {
-      console.log(`  ✅ 週の勤務日数OK`)
+      console.log(`  週の勤務日数OK`)
     }
 
     // 最低休憩時間チェック（前日までのシフトのみチェック）
@@ -410,18 +410,18 @@ export class ShiftOptimizer {
       if (restHours < this.settings.constraints.minRestHours) {
         const conflict = `最低休憩時間不足（${restHours.toFixed(1)}時間）`
         conflicts.push(conflict)
-        console.log(`  ❌ ${conflict}`)
+        console.log(`  ${conflict}`)
       } else {
-        console.log(`  ✅ 休憩時間OK`)
+        console.log(`  休憩時間OK`)
       }
     } else {
-      console.log(`  ✅ 前回シフトなし（休憩時間制約なし）`)
+      console.log(`  前回シフトなし（休憩時間制約なし）`)
     }
 
     if (conflicts.length === 0) {
-      console.log(`  🎉 全制約をクリア！`)
+      console.log(`  全制約をクリア！`)
     } else {
-      console.log(`  ❌ 制約違反: ${conflicts.join(', ')}`)
+      console.log(`  制約違反: ${conflicts.join(', ')}`)
     }
 
     return conflicts
@@ -453,7 +453,7 @@ export class ShiftOptimizer {
    * 欠員チェック
    */
   private checkStaffingShortages(date: string) {
-    console.log(`🔍 ${date} の欠員チェック開始...`)
+    console.log(`${date} の欠員チェック開始...`)
     
     const operatingStart = this.timeToMinutes(this.settings.operatingHours.start)
     const operatingEnd = this.timeToMinutes(this.settings.operatingHours.end)
@@ -505,7 +505,7 @@ export class ShiftOptimizer {
         })
         
         const requestStatus = hasRequests ? '（シフト希望あり）' : '（シフト希望なし）'
-        console.log(`⚠️ 欠員: ${date} ${timeStr} - 必要${this.settings.minStaffPerHour}名/現在${currentStaff}名/不足${shortage}名 ${requestStatus}`)
+        console.log(`欠員: ${date} ${timeStr} - 必要${this.settings.minStaffPerHour}名/現在${currentStaff}名/不足${shortage}名 ${requestStatus}`)
       }
     }
   }
@@ -515,11 +515,11 @@ export class ShiftOptimizer {
    */
   private reportStaffingShortages() {
     if (this.staffingShortages.length === 0) {
-      console.log('✅ 欠員なし - すべての時間帯で最小人数を確保できています')
+      console.log('欠員なし - すべての時間帯で最小人数を確保できています')
       return
     }
     
-    console.log(`⚠️ 欠員レポート: ${this.staffingShortages.length}件の欠員が発生`)
+    console.log(`欠員レポート: ${this.staffingShortages.length}件の欠員が発生`)
     
     // 日付別にグループ化
     const shortagesByDate = this.staffingShortages.reduce((acc, shortage) => {
@@ -529,7 +529,7 @@ export class ShiftOptimizer {
     }, {} as Record<string, StaffingShortage[]>)
     
     Object.entries(shortagesByDate).forEach(([date, shortages]) => {
-      console.log(`📅 ${date}:`)
+      console.log(`${date}:`)
       shortages.forEach(shortage => {
         const requestStatus = shortage.hasRequests ? '（希望あり）' : '（希望なし）'
         console.log(`  ${shortage.timeSlot}: ${shortage.shortage}名不足 ${requestStatus}`)
@@ -541,7 +541,7 @@ export class ShiftOptimizer {
     const shortagesWithRequests = this.staffingShortages.filter(s => s.hasRequests).length
     const shortagesWithoutRequests = this.staffingShortages.filter(s => !s.hasRequests).length
     
-    console.log(`📊 欠員統計:`)
+    console.log(`欠員統計:`)
     console.log(`  総欠員数: ${totalShortage}名`)
     console.log(`  シフト希望ありの欠員: ${shortagesWithRequests}件`)
     console.log(`  シフト希望なしの欠員: ${shortagesWithoutRequests}件`)
@@ -551,12 +551,12 @@ export class ShiftOptimizer {
    * 生成されたシフトの検証
    */
   private validateGeneratedShifts() {
-    console.log('🔍 生成されたシフトの検証中...')
+    console.log('生成されたシフトの検証中...')
     
     const validation = ShiftValidator.validateShifts(this.generatedShifts)
     
     if (!validation.isValid) {
-      console.warn('⚠️ 生成されたシフトに問題があります:')
+      console.warn('生成されたシフトに問題があります:')
       validation.errors.forEach(error => console.warn(`  - ${error}`))
       
       // 問題のあるシフトを除去
@@ -566,14 +566,14 @@ export class ShiftOptimizer {
         if (shiftValidation.isValid) {
           validShifts.push(shift)
         } else {
-          console.warn(`❌ 無効なシフトを除去: ${shift.employeeName || shift.employeeId} ${shift.date} ${shift.startTime}-${shift.endTime}`)
+          console.warn(`無効なシフトを除去: ${shift.employeeName || shift.employeeId} ${shift.date} ${shift.startTime}-${shift.endTime}`)
         }
       }
       
       this.generatedShifts = validShifts
-      console.log(`🔧 検証後のシフト数: ${this.generatedShifts.length}件`)
+      console.log(`検証後のシフト数: ${this.generatedShifts.length}件`)
     } else {
-      console.log('✅ 全てのシフトが正常です')
+      console.log('全てのシフトが正常です')
     }
 
     // シフト希望との整合性チェック
@@ -586,15 +586,15 @@ export class ShiftOptimizer {
       )
       
       if (request && !ShiftValidator.isShiftWithinRequest(shift, request)) {
-        console.warn(`⚠️ シフト希望と不整合: ${shift.employeeName} ${shift.date} ${shift.startTime}-${shift.endTime}`)
+        console.warn(`シフト希望と不整合: ${shift.employeeName} ${shift.date} ${shift.startTime}-${shift.endTime}`)
         inconsistentCount++
       }
     }
     
     if (inconsistentCount > 0) {
-      console.warn(`⚠️ ${inconsistentCount}件のシフトがシフト希望と不整合です`)
+      console.warn(`${inconsistentCount}件のシフトがシフト希望と不整合です`)
     } else {
-      console.log('✅ 全てのシフトがシフト希望と整合しています')
+      console.log('全てのシフトがシフト希望と整合しています')
     }
   }
 

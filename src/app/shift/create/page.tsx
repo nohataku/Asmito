@@ -174,7 +174,7 @@ export default function CreateShiftPage() {
         requestsList.push({ id: doc.id, ...doc.data() } as ShiftRequest)
       })
       
-      console.log(`🗓️ シフト希望を取得: ${requestsList.length}件`)
+      console.log(`シフト希望を取得: ${requestsList.length}件`)
       requestsList.slice(0, 5).forEach(req => {
         console.log(`  - ${req.date} ${req.type} ${req.startTime || ''}-${req.endTime || ''} (${req.priority || 'N/A'})`)
       })
@@ -187,12 +187,12 @@ export default function CreateShiftPage() {
   const generateShifts = async () => {
     setIsGenerating(true)
     try {
-      console.log('🤖 AI強化シフト最適化を開始します...')
+      console.log('AI強化シフト最適化を開始します...')
       console.log('現在の設定:', settings)
 
       // シフト希望がない場合の警告
       if (shiftRequests.filter(req => req.type === 'work').length === 0) {
-        alert('⚠️ シフト希望が提出されていません。\nシフトを生成するには、まず従業員にシフト希望を提出してもらってください。')
+        alert('シフト希望が提出されていません。\nシフトを生成するには、まず従業員にシフト希望を提出してもらってください。')
         return
       }
       
@@ -200,7 +200,7 @@ export default function CreateShiftPage() {
       let shortages: any[] = []
       
       if (useAIOptimization) {
-        console.log('🧠 AI強化オプティマイザーを使用中...')
+        console.log('AI強化オプティマイザーを使用中...')
         // AI強化オプティマイザーを使用（データマネージャー付き）
         const aiOptimizer = new AIShiftOptimizer(employees, shiftRequests, settings, aiDataManager)
         optimizedShifts = await aiOptimizer.optimize()
@@ -215,7 +215,7 @@ export default function CreateShiftPage() {
           efficiencyScore: 0.88
         })
       } else {
-        console.log('📊 標準オプティマイザーを使用中...')
+        console.log('標準オプティマイザーを使用中...')
         // 従来のオプティマイザーを使用
         const optimizer = new ShiftOptimizer(employees, shiftRequests, settings)
         optimizedShifts = optimizer.optimize()
@@ -230,22 +230,22 @@ export default function CreateShiftPage() {
         })
       }
       
-      console.log(`✅ 最適化完了: ${optimizedShifts.length}件のシフトを生成`)
+      console.log(`最適化完了: ${optimizedShifts.length}件のシフトを生成`)
       setGeneratedShifts(optimizedShifts)
       setStaffingShortages(shortages)
       
       // 最適化結果のサマリーを表示
       const summary = generateOptimizationSummary(optimizedShifts)
-      console.log('📊 最適化サマリー:', summary)
+      console.log('最適化サマリー:', summary)
 
       if (optimizedShifts.length === 0) {
-        alert('⚠️ 現在の設定条件では、シフトを生成できませんでした。\n提出されたシフト希望の内容を確認するか、制約条件を緩和してください。')
+        alert('現在の設定条件では、シフトを生成できませんでした。\n提出されたシフト希望の内容を確認するか、制約条件を緩和してください。')
       } else {
         const optimizationType = useAIOptimization ? 'AI強化' : '標準'
-        console.log(`📝 ${optimizationType}最適化によりシフトが生成されました。`)
+        console.log(`${optimizationType}最適化によりシフトが生成されました。`)
         
         if (shortages.length > 0) {
-          console.log(`⚠️ ${shortages.length}件の欠員が発生しています。`)
+          console.log(`${shortages.length}件の欠員が発生しています。`)
         }
       }
       
@@ -278,7 +278,7 @@ export default function CreateShiftPage() {
     if (!user || generatedShifts.length === 0) return
 
     try {
-      console.log('💾 シフトを保存中...')
+      console.log('シフトを保存中...')
       
       // スケジュールを保存
       const scheduleDoc = await addDoc(collection(db, 'schedules'), {
@@ -305,7 +305,7 @@ export default function CreateShiftPage() {
         })
       }
 
-      alert(`✅ ${useAIOptimization ? 'AI強化' : '標準'}最適化されたシフトが正常に保存されました。${staffingShortages.length > 0 ? `\n⚠️ ${staffingShortages.length}件の欠員情報も記録されました。` : ''}`)
+      alert(`${useAIOptimization ? 'AI強化' : '標準'}最適化されたシフトが正常に保存されました。${staffingShortages.length > 0 ? `\n⚠️ ${staffingShortages.length}件の欠員情報も記録されました。` : ''}`)
       setGeneratedShifts([])
       setStaffingShortages([])
     } catch (error) {
@@ -347,14 +347,14 @@ export default function CreateShiftPage() {
             onClick={() => setShowAIDataManagement(!showAIDataManagement)}
             className="text-purple-600 dark:text-purple-400 border border-purple-600 dark:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 bg-white dark:bg-gray-800"
           >
-            {showAIDataManagement ? '📊 シフト作成に戻る' : '🤖 AIデータ管理'}
+            {showAIDataManagement ? '📊 シフト作成に戻る' : 'AIデータ管理'}
           </Button>
           {!isLoadingSettings && (
             <Button 
               onClick={resetToSystemSettings}
               className="text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 bg-white dark:bg-gray-800"
             >
-              🔄 システム設定に戻す
+              システム設定に戻す
             </Button>
           )}
         </div>
@@ -391,7 +391,7 @@ export default function CreateShiftPage() {
                   <span>スケジュール設定</span>
                   {!isLoadingSettings && (
                     <span className="text-sm text-green-600 dark:text-green-400 font-normal">
-                      ✅ システム設定から読み込み済み
+                      システム設定から読み込み済み
                     </span>
                   )}
                 </CardTitle>
@@ -614,10 +614,10 @@ export default function CreateShiftPage() {
                   {isGenerating ? (
                     <div className="flex items-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {useAIOptimization ? '🤖 AI最適化中...' : '📊 最適化中...'}
+                      {useAIOptimization ? 'AI最適化中...' : '最適化中...'}
                     </div>
                   ) : (
-                    useAIOptimization ? '🚀 AI強化シフト生成' : '📊 シフト生成'
+                    useAIOptimization ? 'AI強化シフト生成' : 'シフト生成'
                   )}
                 </Button>
               </CardContent>
@@ -654,7 +654,7 @@ export default function CreateShiftPage() {
                   {generatedShifts.length > 0 && (
                     <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 rounded-lg border border-green-200 dark:border-green-600">
                       <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
-                        {useAIOptimization ? '🤖 AI強化最適化結果' : '📊 標準最適化結果'}
+                        {useAIOptimization ? 'AI強化最適化結果' : '標準最適化結果'}
                       </h4>
                       {(() => {
                         const summary = generateOptimizationSummary(generatedShifts)
@@ -697,7 +697,7 @@ export default function CreateShiftPage() {
                 {generatedShifts.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <Button onClick={saveShifts} className="w-full bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600">
-                      💾 {useAIOptimization ? 'AI' : ''}シフトを保存
+                      {useAIOptimization ? 'AI' : ''}シフトを保存
                     </Button>
                   </div>
                 )}
@@ -730,7 +730,7 @@ export default function CreateShiftPage() {
           {generatedShifts.length > 0 && useAIOptimization && aiMetrics && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-purple-600 dark:text-purple-400">🤖 AI最適化詳細情報</CardTitle>
+                <CardTitle className="text-purple-600 dark:text-purple-400">AI最適化詳細情報</CardTitle>
                 <CardDescription>
                   機械学習アルゴリズムによる最適化の詳細情報
                 </CardDescription>
@@ -778,7 +778,7 @@ export default function CreateShiftPage() {
                   
                   <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-600">
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      <strong>💡 AI最適化の利点:</strong> 
+                      <strong>AI最適化の利点:</strong> 
                       外部API不使用のローカルAIにより、コスト効率良く、従業員の満足度とシフトの質を同時に最適化します。
                       機械学習により従業員の過去の実績やスキル、希望を総合的に分析し、最適な配置を実現します。
                     </p>
@@ -942,7 +942,7 @@ export default function CreateShiftPage() {
                 
                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    💡 <strong>対策案:</strong><br />
+                    <strong>対策案:</strong><br />
                     • 「希望あり」の欠員: 制約条件を緩和するか、他の従業員にシフト希望を追加依頼<br />
                     • 「希望なし」の欠員: 従業員にその時間帯でのシフト希望提出を依頼<br />
                     • 「シフト希望未提出者への割り当てを許可」をONにすることで一部解決可能

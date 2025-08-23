@@ -21,6 +21,7 @@ interface GanttChartProps {
   }
   onShiftUpdate?: (updatedShift: Shift) => void
   onShiftDelete?: (shiftId: string) => void
+  onAlert?: (message: string, type?: 'success' | 'error' | 'warning' | 'info') => void
 }
 
 interface ExportOptions {
@@ -37,7 +38,8 @@ export default function GanttChart({
   endDate, 
   operatingHours = { start: '06:00', end: '24:00' },
   onShiftUpdate,
-  onShiftDelete
+  onShiftDelete,
+  onAlert
 }: GanttChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const timeHeaderRef = useRef<HTMLDivElement>(null)
@@ -153,7 +155,7 @@ export default function GanttChart({
       }, `image/${format}`)
     } catch (error) {
       console.error('画像エクスポートに失敗しました:', error)
-      alert('画像エクスポートに失敗しました。')
+      onAlert?.('画像エクスポートに失敗しました。', 'error')
     } finally {
       setIsExporting(false)
     }
@@ -184,7 +186,7 @@ export default function GanttChart({
       pdf.save(`${exportOptions.title}.pdf`)
     } catch (error) {
       console.error('PDFエクスポートに失敗しました:', error)
-      alert('PDFエクスポートに失敗しました。')
+      onAlert?.('PDFエクスポートに失敗しました。', 'error')
     } finally {
       setIsExporting(false)
     }
@@ -238,7 +240,7 @@ export default function GanttChart({
       XLSX.writeFile(wb, `${exportOptions.title}.xlsx`)
     } catch (error) {
       console.error('Excelエクスポートに失敗しました:', error)
-      alert('Excelエクスポートに失敗しました。')
+      onAlert?.('Excelエクスポートに失敗しました。', 'error')
     } finally {
       setIsExporting(false)
     }
@@ -269,7 +271,7 @@ export default function GanttChart({
       saveAs(blob, `${exportOptions.title}.csv`)
     } catch (error) {
       console.error('CSVエクスポートに失敗しました:', error)
-      alert('CSVエクスポートに失敗しました。')
+      onAlert?.('CSVエクスポートに失敗しました。', 'error')
     } finally {
       setIsExporting(false)
     }

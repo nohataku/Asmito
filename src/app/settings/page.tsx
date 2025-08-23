@@ -7,10 +7,13 @@ import Layout from '@/components/layout/Layout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { AlertModal } from '@/components/ui/Modal'
+import { useModal } from '@/hooks/useModal'
 import { useThemeStore } from '@/store/themeStore'
 import { useAuthStore } from '@/store/authStore'
 import { DataManagementService, type DataStats } from '@/services/dataManagementService'
 import { AIDataManager } from '@/lib/aiDataManager'
+import { UpdateNotificationService } from '@/services/updateNotificationService'
 
 interface SystemSettings {
   company: {
@@ -38,12 +41,6 @@ interface SystemSettings {
   assignmentPolicy: {
     allowUnrequestedAssignment: boolean
     prioritizeRequested: boolean
-  }
-  notifications: {
-    emailNotifications: boolean
-    smsNotifications: boolean
-    shiftReminders: boolean
-    requestNotifications: boolean
   }
   ai: {
     enableAI: boolean
@@ -83,12 +80,6 @@ const defaultSettings: SystemSettings = {
     allowUnrequestedAssignment: true,
     prioritizeRequested: true
   },
-  notifications: {
-    emailNotifications: true,
-    smsNotifications: false,
-    shiftReminders: true,
-    requestNotifications: true
-  },
   ai: {
     enableAI: true,
     optimizationWeight: {
@@ -102,6 +93,7 @@ const defaultSettings: SystemSettings = {
 
 export default function SettingsPage() {
   const { user } = useAuthStore()
+  const { alertState, showAlert, closeAlert } = useModal()
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -109,6 +101,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [dataStats, setDataStats] = useState<DataStats | null>(null)
   const [dataOperationLoading, setDataOperationLoading] = useState(false)
+  const [showUpdateHistory, setShowUpdateHistory] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -153,7 +146,7 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 3000)
     } catch (error) {
       console.error('設定の保存に失敗しました:', error)
-      alert('設定の保存に失敗しました。')
+      showAlert('設定の保存に失敗しました。', { type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -183,10 +176,10 @@ export default function SettingsPage() {
       setDataOperationLoading(true)
       const exportData = await DataManagementService.exportData(user.uid)
       DataManagementService.downloadAsJSON(exportData)
-      alert('データエクスポートが完了しました。')
+      showAlert('データエクスポートが完了しました。', { type: 'success' })
     } catch (error) {
       console.error('データエクスポートに失敗しました:', error)
-      alert('データエクスポートに失敗しました。')
+      showAlert('データエクスポートに失敗しました。', { type: 'error' })
     } finally {
       setDataOperationLoading(false)
     }
@@ -200,10 +193,10 @@ export default function SettingsPage() {
       setDataOperationLoading(true)
       const exportData = await DataManagementService.exportData(user.uid)
       DataManagementService.downloadEmployeesAsCSV(exportData.employees)
-      alert('従業員CSVエクスポートが完了しました。')
+      showAlert('従業員CSVエクスポートが完了しました。', { type: 'success' })
     } catch (error) {
       console.error('従業員CSVエクスポートに失敗しました:', error)
-      alert('従業員CSVエクスポートに失敗しました。')
+      showAlert('従業員CSVエクスポートに失敗しました。', { type: 'error' })
     } finally {
       setDataOperationLoading(false)
     }
@@ -224,15 +217,15 @@ export default function SettingsPage() {
             const validation = DataManagementService.validateImportData(data)
             
             if (!validation.isValid) {
-              alert(`データが無効です:\n${validation.errors.join('\n')}`)
+              showAlert(`データが無効です:\n${validation.errors.join('\n')}`, { type: 'error' })
               return
             }
             
             // インポート処理は複雑なため、現在は準備中として表示
-            alert('データインポート機能は準備中です。')
+            showAlert('データインポート機能は準備中です。', { type: 'info' })
           } catch (error) {
             console.error('データインポートに失敗しました:', error)
-            alert('データインポートに失敗しました。ファイル形式を確認してください。')
+            showAlert('データインポートに失敗しました。ファイル形式を確認してください。', { type: 'error' })
           }
         }
         reader.readAsText(file)
@@ -287,7 +280,7 @@ export default function SettingsPage() {
         '• AIデータ: 削除済み（パフォーマンスデータ・学習データ）'
       ].join('\n')
       
-      alert(message)
+      showAlert(message, { type: 'success' })
       
       // データ統計を再読み込み
       await loadDataStats()
@@ -297,7 +290,7 @@ export default function SettingsPage() {
       
     } catch (error) {
       console.error('全データ削除に失敗しました:', error)
-      alert('全データ削除に失敗しました。一部のデータが残っている可能性があります。')
+      showAlert('全データ削除に失敗しました。一部のデータが残っている可能性があります。', { type: 'error' })
     } finally {
       setDataOperationLoading(false)
     }
@@ -330,21 +323,21 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">システム設定</h1>
           <div className="flex gap-2">
             {saved && (
-              <span className="text-green-600 dark:text-green-400 font-medium">✅ 保存しました</span>
+              <span className="text-green-600 dark:text-green-400 font-medium">保存しました</span>
             )}
             <Button 
               onClick={saveSettings} 
               disabled={saving}
               className="bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
             >
-              {saving ? '保存中...' : '💾 設定を保存'}
+              {saving ? '保存中...' : '設定を保存'}
             </Button>
           </div>
         </div>
 
         {/* 会社情報 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🏢 会社情報</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">会社情報</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">会社名</label>
@@ -384,7 +377,7 @@ export default function SettingsPage() {
 
         {/* 勤務設定 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">⏰ 勤務設定</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">勤務設定</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">営業開始時間</label>
@@ -434,7 +427,7 @@ export default function SettingsPage() {
 
         {/* 労働制約 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">📋 労働制約</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">労働制約</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">1日最大労働時間</label>
@@ -486,52 +479,9 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        {/* 通知設定 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🔔 通知設定</h2>
-          <div className="space-y-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.emailNotifications}
-                onChange={(e) => updateSettings('notifications.emailNotifications', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">メール通知を有効にする</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.smsNotifications}
-                onChange={(e) => updateSettings('notifications.smsNotifications', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">SMS通知を有効にする</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.shiftReminders}
-                onChange={(e) => updateSettings('notifications.shiftReminders', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">シフトリマインダーを有効にする</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.notifications.requestNotifications}
-                onChange={(e) => updateSettings('notifications.requestNotifications', e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <span className="text-gray-900 dark:text-gray-100">リクエスト通知を有効にする</span>
-            </label>
-          </div>
-        </Card>
-
         {/* シフト割り当てポリシー */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">📋 シフト割り当てポリシー</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">シフト割り当てポリシー</h2>
           <div className="space-y-4">
             <label className="flex items-center">
               <input
@@ -563,7 +513,7 @@ export default function SettingsPage() {
 
         {/* AI設定 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🤖 AI最適化設定</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">AI最適化設定</h2>
           <div className="space-y-4">
             <label className="flex items-center">
               <input
@@ -635,7 +585,7 @@ export default function SettingsPage() {
                 <div className="text-sm text-gray-900 dark:text-gray-100">
                   合計: {Object.values(settings.ai.optimizationWeight).reduce((sum, val) => sum + val, 0)}%
                   {Object.values(settings.ai.optimizationWeight).reduce((sum, val) => sum + val, 0) !== 100 && (
-                    <span className="text-red-600 dark:text-red-400 ml-2">⚠️ 合計を100%にしてください</span>
+                    <span className="text-red-600 dark:text-red-400 ml-2">合計を100%にしてください</span>
                   )}
                 </div>
               </div>
@@ -645,7 +595,7 @@ export default function SettingsPage() {
 
         {/* テーマ設定 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🎨 テーマ設定</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">テーマ設定</h2>
           <div className="space-y-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               アプリケーションの外観テーマを選択できます。システムを選択すると、お使いのOSやブラウザの設定に基づいて自動的に切り替わります。
@@ -691,14 +641,108 @@ export default function SettingsPage() {
           </div>
         </Card>
 
+        {/* アップデート履歴 */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">アップデート履歴</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Asmitoの最新情報とアップデート履歴を確認できます。
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setShowUpdateHistory(!showUpdateHistory)}
+                className="text-sm"
+              >
+                {showUpdateHistory ? '履歴を閉じる' : '履歴を表示'}
+              </Button>
+            </div>
+            
+            {showUpdateHistory && (
+              <div className="mt-4 space-y-6 max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                {UpdateNotificationService.getAllUpdates().map((update) => (
+                  <div key={update.id} className="border-l-4 border-l-blue-400 pl-4 pb-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100 break-words">
+                          {update.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded flex-shrink-0">
+                            v{update.version}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {update.date}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 break-words">
+                      {update.description}
+                    </p>
+                    
+                    {update.features && update.features.length > 0 && (
+                      <div className="mb-2">
+                        <h4 className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">✨ 新機能</h4>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                          {update.features.map((feature, index) => (
+                            <li key={index}>{feature}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {update.improvements && update.improvements.length > 0 && (
+                      <div className="mb-2">
+                        <h4 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">改善点</h4>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                          {update.improvements.map((improvement, index) => (
+                            <li key={index}>{improvement}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {update.bugFixes && update.bugFixes.length > 0 && (
+                      <div className="mb-2">
+                        <h4 className="text-xs font-medium text-red-700 dark:text-red-300 mb-1">バグ修正</h4>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
+                          {update.bugFixes.map((fix, index) => (
+                            <li key={index}>{fix}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* 開発者向け機能 */}
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button 
+                onClick={() => {
+                  UpdateNotificationService.clearAllDismissed()
+                  alert('すべての既読状態をリセットしました。ページを再読み込みするとアップデート通知が再表示されます。')
+                }}
+                variant="outline"
+                className="text-xs"
+              >
+                既読状態をリセット（開発・テスト用）
+              </Button>
+            </div>
+          </div>
+        </Card>
+
         {/* データ管理 */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🗄️ データ管理</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">データ管理</h2>
           
           {/* データ統計 */}
           {dataStats && (
             <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">📊 データ統計</h3>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">データ統計</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{dataStats.employees}</div>
@@ -770,7 +814,7 @@ export default function SettingsPage() {
                 variant="outline"
                 className="mr-2"
               >
-                🔄 統計更新
+                統計更新
               </Button>
             </div>
             
@@ -793,6 +837,15 @@ export default function SettingsPage() {
           </div>
         </Card>
       </div>
+
+      {/* アラートモーダル */}
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        title={alertState.options.title}
+        message={alertState.message}
+        type={alertState.options.type}
+      />
     </Layout>
   )
 }

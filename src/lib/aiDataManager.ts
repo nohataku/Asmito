@@ -109,7 +109,7 @@ export class AIDataManager {
    */
   async loadFromFirebase(organizationId: string): Promise<void> {
     try {
-      console.log('🤖 Firebaseから全AIデータを読み込み中...', organizationId)
+      console.log('Firebaseから全AIデータを読み込み中...', organizationId)
       
       const allData = await AIDataFirebaseService.loadAllAIData(organizationId)
       
@@ -121,7 +121,7 @@ export class AIDataManager {
         this.businessData = allData.businessData
       }
       
-      console.log(`✅ Firebaseからデータ読み込み完了: 従業員${this.performanceData.size}名`)
+      console.log(`Firebaseからデータ読み込み完了: 従業員${this.performanceData.size}名`)
       
     } catch (error) {
       console.error('Firebaseからのデータ読み込みに失敗:', error)
@@ -134,7 +134,7 @@ export class AIDataManager {
    */
   async saveToFirebase(organizationId: string): Promise<void> {
     try {
-      console.log('💾 FirebaseにAIデータを保存中...', organizationId)
+      console.log('FirebaseにAIデータを保存中...', organizationId)
       
       // データが存在しない場合はデフォルト値を生成
       if (!this.businessData) {
@@ -147,7 +147,7 @@ export class AIDataManager {
         this.businessData
       )
       
-      console.log('✅ Firebaseへのデータ保存が完了しました')
+      console.log('Firebaseへのデータ保存が完了しました')
       
     } catch (error) {
       console.error('Firebaseへのデータ保存に失敗:', error)
@@ -160,7 +160,7 @@ export class AIDataManager {
    */
   async deleteAllData(organizationId: string): Promise<void> {
     try {
-      console.log('🗑️ FirebaseからAIデータを削除中...', organizationId)
+      console.log('FirebaseからAIデータを削除中...', organizationId)
       
       // Firebaseから削除
       await AIDataFirebaseService.deleteAllAIData(organizationId)
@@ -169,7 +169,7 @@ export class AIDataManager {
       this.performanceData.clear()
       this.businessData = null
       
-      console.log('✅ 全AIデータの削除が完了しました')
+      console.log('全AIデータの削除が完了しました')
       
     } catch (error) {
       console.error('全AIデータの削除に失敗:', error)

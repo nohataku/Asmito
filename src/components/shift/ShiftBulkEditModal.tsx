@@ -96,7 +96,7 @@ export default function ShiftBulkEditModal({
         updatedShifts.push(updatedShift)
       }
 
-      console.log(`✅ ${updatedShifts.length}件のシフトを一括更新しました`)
+      console.log(`${updatedShifts.length}件のシフトを一括更新しました`)
       onSave(updatedShifts)
       onClose()
     } catch (error) {

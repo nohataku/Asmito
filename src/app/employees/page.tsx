@@ -8,6 +8,8 @@ import { EmployeeService } from '@/services/employeeService'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { AlertModal, ConfirmModal } from '@/components/ui/Modal'
+import { useModal } from '@/hooks/useModal'
 import { ShiftPaymentCalculator } from '@/components/ShiftPaymentCalculator'
 import { Employee, HourlyRates, AvailableShiftTypes } from '@/types/employee'
 import { generateDefaultHourlyRates, DEFAULT_SHIFT_TIME_RANGES } from '@/lib/shiftTimeUtils'
@@ -15,6 +17,7 @@ import Layout from '@/components/layout/Layout'
 
 export default function EmployeesPage() {
   const { user } = useAuthStore()
+  const { alertState, confirmState, showAlert, closeAlert, showConfirm, closeConfirm } = useModal()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -90,7 +93,7 @@ export default function EmployeesPage() {
       setEmployees(employeeList as Employee[])
     } catch (error) {
       console.error('従業員データの取得に失敗しました:', error)
-      alert('従業員データの取得に失敗しました。')
+      showAlert('従業員データの取得に失敗しました。', { type: 'error' })
     } finally {
       setIsLoading(false)
     }
@@ -157,7 +160,7 @@ export default function EmployeesPage() {
       fetchEmployees()
     } catch (error) {
       console.error('従業員の保存に失敗しました:', error)
-      alert('従業員の保存に失敗しました。')
+      showAlert('従業員の保存に失敗しました。', { type: 'error' })
     }
   }
 
@@ -184,12 +187,16 @@ export default function EmployeesPage() {
   }
 
   const handleDelete = async (employeeId: string) => {
-    const deleteConfirm = confirm(
+    const deleteConfirm = await showConfirm(
       'この従業員を完全削除しますか？\n\n' +
       '⚠️ 注意: この操作は取り消せません。\n' +
-      'データベースから完全に削除されます。\n\n' +
-      'OK: 完全削除\n' +
-      'キャンセル: 操作を中止'
+      'データベースから完全に削除されます。',
+      {
+        title: '従業員の削除',
+        confirmText: '完全削除',
+        cancelText: 'キャンセル',
+        type: 'danger'
+      }
     );
     
     if (!deleteConfirm) return;
@@ -201,12 +208,16 @@ export default function EmployeesPage() {
 
     let useSoftDelete = false;
     if (isSoftDeleteRequested) {
-      useSoftDelete = confirm(
+      useSoftDelete = await showConfirm(
         'ソフトデリートモード\n\n' +
         'この従業員のデータを非表示にしますか？\n' +
-        '（データは保持され、後で復元可能）\n\n' +
-        'OK: ソフトデリート\n' +
-        'キャンセル: 完全削除'
+        '（データは保持され、後で復元可能）',
+        {
+          title: 'ソフトデリート',
+          confirmText: 'ソフトデリート',
+          cancelText: '完全削除',
+          type: 'warning'
+        }
       );
     }
 
@@ -219,21 +230,21 @@ export default function EmployeesPage() {
         const message = totalDeleted > 0 
           ? `従業員を非表示にしました。\n関連データも削除: シフト希望${deletedData.shiftRequests}件、確定シフト${deletedData.shifts}件`
           : '従業員を非表示にしました。'
-        alert(message)
+        showAlert(message, { type: 'success' })
       } else {
         const deletedData = await EmployeeService.hardDeleteEmployee(employeeId)
         const totalDeleted = deletedData.shiftRequests + deletedData.shifts
         const message = totalDeleted > 0 
           ? `従業員を完全削除しました。\n関連データも削除: シフト希望${deletedData.shiftRequests}件、確定シフト${deletedData.shifts}件`
           : '従業員を完全削除しました。'
-        alert(message)
+        showAlert(message, { type: 'success' })
       }
       
       console.log('従業員削除が完了しました:', employeeId)
       fetchEmployees()
     } catch (error) {
       console.error('従業員の削除に失敗しました:', error)
-      alert(`従業員の削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
+      showAlert(`従業員の削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`, { type: 'error' })
     }
   }
 
@@ -275,10 +286,10 @@ export default function EmployeesPage() {
         await EmployeeService.addEmployee(user.uid, employeeData)
       }
       fetchEmployees()
-      alert('サンプル従業員データを追加しました。')
+      showAlert('サンプル従業員データを追加しました。', { type: 'success' })
     } catch (error) {
       console.error('サンプルデータの追加に失敗しました:', error)
-      alert('サンプルデータの追加に失敗しました。')
+      showAlert('サンプルデータの追加に失敗しました。', { type: 'error' })
     }
   }
 
@@ -289,11 +300,11 @@ export default function EmployeesPage() {
       console.log('既存データの修正を開始...')
       const fixedCount = await EmployeeService.fixEmployeeData(user.uid)
       console.log(`データ修正完了: ${fixedCount}件`)
-      alert(`${fixedCount}件の従業員データを修正しました。`)
+      showAlert(`${fixedCount}件の従業員データを修正しました。`, { type: 'success' })
       fetchEmployees()
     } catch (error) {
       console.error('データ修正に失敗しました:', error)
-      alert('データ修正に失敗しました。')
+      showAlert('データ修正に失敗しました。', { type: 'error' })
     }
   }
 
@@ -418,7 +429,7 @@ export default function EmployeesPage() {
                             onClick={handleAutoCalculateRates}
                             disabled={!formData.hourlyRate}
                           >
-                            🔄 自動設定
+                            自動設定
                           </Button>
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -726,6 +737,27 @@ export default function EmployeesPage() {
               )}
             </CardContent>
           </Card>
+
+      {/* アラートモーダル */}
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        title={alertState.options.title}
+        message={alertState.message}
+        type={alertState.options.type}
+      />
+
+      {/* 確認モーダル */}
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        onClose={() => closeConfirm(false)}
+        onConfirm={() => closeConfirm(true)}
+        title={confirmState.options.title}
+        message={confirmState.message}
+        confirmText={confirmState.options.confirmText}
+        cancelText={confirmState.options.cancelText}
+        type={confirmState.options.type}
+      />
     </Layout>
   )
 }

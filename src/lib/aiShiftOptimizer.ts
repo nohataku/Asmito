@@ -97,7 +97,7 @@ export class AIShiftOptimizer {
    * AI最適化メイン処理
    */
   async optimize(): Promise<Shift[]> {
-    console.log('🤖 AI強化シフト最適化を開始...')
+    console.log('AI強化シフト最適化を開始...')
     
     // 1. 従業員プロファイル分析
     this.analyzeEmployeeProfiles()
@@ -117,7 +117,7 @@ export class AIShiftOptimizer {
     // 6. 最終検証
     this.validateSolutions(optimizedShifts)
     
-    console.log(`✅ AI最適化完了: ${optimizedShifts.length}件のシフトを生成`)
+    console.log(`AI最適化完了: ${optimizedShifts.length}件のシフトを生成`)
     return optimizedShifts
   }
 
@@ -125,7 +125,7 @@ export class AIShiftOptimizer {
    * 1. 従業員プロファイル分析（ローカルAI）
    */
   private analyzeEmployeeProfiles(): void {
-    console.log('🧠 従業員プロファイル分析中...')
+    console.log('従業員プロファイル分析中...')
     
     for (const employee of this.employees) {
       const profile: EmployeeProfile = {
@@ -151,7 +151,7 @@ export class AIShiftOptimizer {
       )
       
       this.employeeProfiles.set(employee.id, profile)
-      console.log(`📊 ${employee.name}: 総合スコア ${profile.totalScore.toFixed(2)}`)
+      console.log(`${employee.name}: 総合スコア ${profile.totalScore.toFixed(2)}`)
     }
   }
 
@@ -159,7 +159,7 @@ export class AIShiftOptimizer {
    * 2. 需要パターン分析（時系列分析AI）
    */
   private analyzeDemandPatterns(): void {
-    console.log('📈 需要パターン分析中...')
+    console.log('需要パターン分析中...')
     
     const dates = this.generateDateRange()
     const operatingHours = this.generateHourlySlots()
@@ -180,14 +180,14 @@ export class AIShiftOptimizer {
       }
     }
     
-    console.log(`📊 ${this.timeSlotDemands.length}の時間帯を分析完了`)
+    console.log(`${this.timeSlotDemands.length}の時間帯を分析完了`)
   }
 
   /**
    * 3. 機械学習ベースの最適化（軽量アルゴリズム）
    */
   private performMLOptimization(): void {
-    console.log('🔬 機械学習最適化中...')
+    console.log('機械学習最適化中...')
     
     // 遺伝的アルゴリズムによる最適化（軽量版）
     const populationSize = 20
@@ -221,7 +221,7 @@ export class AIShiftOptimizer {
    * 4. ルールベースAIによる調整
    */
   private applyRuleBasedAI(): void {
-    console.log('📋 ルールベースAI調整中...')
+    console.log('ルールベースAI調整中...')
     
     for (const solution of this.solutions) {
       const notes: string[] = []
@@ -261,14 +261,14 @@ export class AIShiftOptimizer {
       solution.optimizationNotes = notes
     }
     
-    console.log(`🔧 ${this.solutions.length}のソリューションを調整完了`)
+    console.log(`${this.solutions.length}のソリューションを調整完了`)
   }
 
   /**
    * 5. ソリューション評価と選択
    */
   private evaluateAndSelectSolutions(): Shift[] {
-    console.log('⚖️ ソリューション評価中...')
+    console.log('ソリューション評価中...')
     
     // スコア順にソート
     this.solutions.sort((a, b) => b.aiScore - a.aiScore)
@@ -298,7 +298,7 @@ export class AIShiftOptimizer {
         assignedEmployees.add(`${shift.employeeId}_${shift.date}`)
         timeSlotAssignments.set(timeSlotKey, currentCount + 1)
         
-        console.log(`✅ 選択: ${shift.employeeName} ${shift.date} ${shift.startTime}-${shift.endTime} (スコア: ${solution.aiScore.toFixed(1)})`)
+        console.log(`選択: ${shift.employeeName} ${shift.date} ${shift.startTime}-${shift.endTime} (スコア: ${solution.aiScore.toFixed(1)})`)
       }
     }
     
@@ -309,16 +309,16 @@ export class AIShiftOptimizer {
    * 6. 最終検証
    */
   private validateSolutions(shifts: Shift[]): void {
-    console.log('🔍 最終検証中...')
+    console.log('最終検証中...')
     
     const validation = ShiftValidator.validateShifts(shifts)
     if (!validation.isValid) {
-      console.warn('⚠️ 検証エラー:', validation.errors)
+      console.warn('検証エラー:', validation.errors)
     }
     
     // AI品質指標の計算
     const qualityMetrics = this.calculateQualityMetrics(shifts)
-    console.log('📊 AI品質指標:', qualityMetrics)
+    console.log('AI品質指標:', qualityMetrics)
   }
 
   // === ヘルパーメソッド ===

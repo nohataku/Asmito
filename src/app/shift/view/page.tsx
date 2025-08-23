@@ -304,18 +304,18 @@ export default function ShiftViewPage() {
             onClick={() => setShowCreateModal(true)}
             className="bg-green-600 hover:bg-green-700"
           >
-            ➕ 新規シフト
+            新規シフト
           </Button>
           {shifts.length > 0 && (
             <Button 
               onClick={() => setShowBulkEditModal(true)}
               className="bg-purple-600 hover:bg-purple-700"
             >
-              📝 一括編集
+              一括編集
             </Button>
           )}
           <Button onClick={() => { setLoading(true); fetchData(); }} className="bg-blue-600 hover:bg-blue-700">
-            🔄 データを再読み込み
+            データを再読み込み
           </Button>
         </div>
       </div>

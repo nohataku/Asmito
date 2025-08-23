@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import AnnouncementBell from '@/components/ui/AnnouncementBell'
 
 // SVGアイコンコンポーネント
 const HomeIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -218,7 +219,10 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                     className="h-8 w-auto"
                   />
                 </div>
-                <ThemeToggle />
+                <div className="flex items-center space-x-2">
+                  <AnnouncementBell />
+                  <ThemeToggle />
+                </div>
               </div>
               <nav className="px-3 space-y-1">
                 {navigation.map((item) => (
@@ -275,7 +279,10 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                 className="h-10 w-auto"
               />
             </div>
-            <ThemeToggle />
+            <div className="flex items-center space-x-2">
+              <AnnouncementBell />
+              <ThemeToggle />
+            </div>
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">

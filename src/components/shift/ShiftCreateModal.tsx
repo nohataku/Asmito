@@ -117,7 +117,7 @@ export default function ShiftCreateModal({
         id: docRef.id
       }
 
-      console.log('✅ 新しいシフトを作成しました:', savedShift)
+      console.log('新しいシフトを作成しました:', savedShift)
       onSave(savedShift)
       onClose()
       
@@ -296,7 +296,7 @@ export default function ShiftCreateModal({
                 disabled={loading}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                {loading ? '作成中...' : '✅ 作成'}
+                {loading ? '作成中...' : '作成'}
               </Button>
             </div>
           </CardContent>

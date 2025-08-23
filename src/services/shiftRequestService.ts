@@ -195,4 +195,15 @@ export class ShiftRequestService {
       throw error;
     }
   }
+
+  // シフト希望を削除
+  static async deleteShiftRequest(requestId: string): Promise<void> {
+    try {
+      const docRef = doc(db, this.COLLECTION_NAME, requestId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error('シフト希望の削除に失敗しました:', error);
+      throw error;
+    }
+  }
 }
